@@ -1,0 +1,2157 @@
+{% extends "base.html" %}
+
+{% block title %}칸반보드 - 할일 관리{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div>
+                    <h1 id="viewTitle">칸반보드</h1>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <div class="badge bg-secondary">총 <span id="totalTasksCount">0</span>개</div>
+                        <div class="badge bg-success">완료 <span id="completedTasksCount">0</span>개</div>
+                        <div class="progress" style="width: 150px; height: 16px;">
+                            <div class="progress-bar bg-success" role="progressbar" id="overallCompletionRate" style="width: 0%">
+                                <small>0%</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group" role="group" aria-label="View toggle">
+                    <button type="button" class="btn btn-outline-primary active" id="kanbanViewBtn" onclick="switchView('kanban')">
+                        <i class="fas fa-columns"></i> 칸반
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="listViewBtn" onclick="switchView('list')">
+                        <i class="fas fa-list"></i> 리스트
+                    </button>
+                </div>
+                <div class="btn-group ms-2" role="group" aria-label="Group toggle" id="groupToggleContainer" style="display: none;">
+                    <button type="button" class="btn btn-outline-info" id="groupToggleBtn" onclick="toggleGrouping()">
+                        <i class="fas fa-layer-group"></i> 레이블 그룹핑
+                    </button>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="quick-add-container">
+                    <form id="quickAddForm" class="d-flex">
+                        <input type="text" class="form-control" id="quickTaskTitle" placeholder="할일 제목을 입력하세요..." style="width: 300px;">
+                        <button type="submit" class="btn btn-success ms-2">
+                            <i class="fas fa-plus"></i> 추가
+                        </button>
+                    </form>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#taskModal">
+                    <i class="fas fa-edit"></i> 상세
+                </button>
+                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#statusModal">
+                    <i class="fas fa-columns"></i> 상태 관리
+                </button>
+                <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                    <i class="fas fa-tags"></i> 카테고리 관리
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 칸반 보드 뷰 -->
+<div class="row" id="kanban-board">
+    <!-- 칸반 컬럼들이 여기에 동적으로 로드됩니다 -->
+</div>
+
+<!-- 리스트 뷰 -->
+<div class="row" id="list-view" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="listStatusFilter" style="width: auto;">
+                                <option value="">모든 상태</option>
+                                <!-- 상태 옵션이 동적으로 추가됩니다 -->
+                            </select>
+                            <select class="form-select form-select-sm" id="listCategoryFilter" style="width: auto;">
+                                <option value="">모든 카테고리</option>
+                                <!-- 카테고리 옵션이 동적으로 추가됩니다 -->
+                            </select>
+                            <select class="form-select form-select-sm" id="listPriorityFilter" style="width: auto;">
+                                <option value="">모든 우선순위</option>
+                                <option value="4">긴급</option>
+                                <option value="3">높음</option>
+                                <option value="2">보통</option>
+                                <option value="1">낮음</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <select class="form-select form-select-sm" id="listSortBy" style="width: auto;">
+                                <option value="created_at">생성일순</option>
+                                <option value="updated_at">수정일순</option>
+                                <option value="priority">우선순위순</option>
+                                <option value="title">제목순</option>
+                            </select>
+                            <select class="form-select form-select-sm" id="listSortOrder" style="width: auto;">
+                                <option value="desc">내림차순</option>
+                                <option value="asc">오름차순</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">
+                                    <input type="checkbox" class="form-check-input" id="selectAllTasks">
+                                </th>
+                                <th width="5%">핀</th>
+                                <th width="30%">제목</th>
+                                <th width="15%">상태</th>
+                                <th width="10%">카테고리</th>
+                                <th width="10%">우선순위</th>
+                                <th width="15%">생성일</th>
+                                <th width="10%">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listTasksBody">
+                            <!-- 리스트 아이템들이 여기에 동적으로 로드됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span id="listTaskCount">0개 항목</span>
+                        <span id="listSelectedCount" style="display: none;">0개 선택됨</span>
+                    </div>
+                    <div class="btn-group" id="listBulkActions" style="display: none;">
+                        <button class="btn btn-sm btn-outline-primary" onclick="bulkUpdateStatus()">
+                            <i class="fas fa-edit"></i> 상태 변경
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="bulkDeleteTasks()">
+                            <i class="fas fa-trash"></i> 삭제
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 할일 추가/편집 모달 -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">할일 추가</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <input type="hidden" id="taskId">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">제목</label>
+                        <input type="text" class="form-control" id="taskTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">설명</label>
+                        <div id="taskDescriptionEditor" style="min-height: 400px;"></div>
+                        <textarea class="form-control d-none" id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="taskPriority" class="form-label">우선순위</label>
+                            <select class="form-select" id="taskPriority">
+                                <option value="1">낮음</option>
+                                <option value="2">보통</option>
+                                <option value="3">높음</option>
+                                <option value="4">긴급</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="taskStatus" class="form-label">상태</label>
+                            <select class="form-select" id="taskStatus">
+                                <!-- 상태 옵션들이 동적으로 로드됩니다 -->
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="taskCategory" class="form-label">카테고리</label>
+                            <select class="form-select" id="taskCategory">
+                                <option value="">카테고리 없음</option>
+                                <!-- 카테고리 옵션들이 동적으로 로드됩니다 -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskLabels" class="form-label">레이블</label>
+                        <input type="text" class="form-control" id="taskLabels" placeholder="쉼표로 구분하여 입력 (예: 긴급, 중요, 검토필요)">
+                        <small class="form-text text-muted">레이블은 쉼표로 구분하여 입력하세요</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="saveTask()">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 상태 관리 모달 -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">상태 관리</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="add-status-form mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="newStatusName" placeholder="새 상태 이름">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="newStatusType">
+                                <option value="pending">진행 전</option>
+                                <option value="progress">진행 중</option>
+                                <option value="done">완료</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-success w-100" onclick="addNewStatus()">
+                                <i class="fas fa-plus"></i> 추가
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover status-management-table">
+                        <thead>
+                            <tr>
+                                <th width="10%">순서</th>
+                                <th width="30%">상태명</th>
+                                <th width="15%">타입</th>
+                                <th width="15%">할일 수</th>
+                                <th width="30%">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statusTableBody">
+                            <!-- 상태 목록이 여기에 동적으로 로드됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                <button type="button" class="btn btn-primary" onclick="saveStatusOrder()">순서 저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 상태 편집 모달 -->
+<div class="modal fade" id="editStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">상태 편집</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editStatusForm">
+                    <input type="hidden" id="editStatusId">
+                    <div class="mb-3">
+                        <label for="editStatusName" class="form-label">상태명</label>
+                        <input type="text" class="form-control" id="editStatusName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStatusType" class="form-label">타입</label>
+                        <select class="form-select" id="editStatusType">
+                            <option value="pending">진행 전</option>
+                            <option value="progress">진행 중</option>
+                            <option value="done">완료</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStatusOrder" class="form-label">순서</label>
+                        <input type="number" class="form-control" id="editStatusOrder" min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="updateStatus()">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 카테고리 관리 모달 -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">카테고리 관리</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="add-category-form mb-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="newCategoryName" placeholder="카테고리 이름">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="color" class="form-control form-control-color" id="newCategoryColor" value="#007bff" title="색상 선택">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success w-100" onclick="addNewCategory()">
+                                <i class="fas fa-plus"></i> 추가
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>색상</th>
+                                <th>카테고리명</th>
+                                <th>할일 수</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryTableBody">
+                            <!-- 카테고리 목록이 여기에 동적으로 로드됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 카테고리 편집 모달 -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">카테고리 편집</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCategoryForm">
+                    <input type="hidden" id="editCategoryId">
+                    <div class="mb-3">
+                        <label for="editCategoryName" class="form-label">카테고리명</label>
+                        <input type="text" class="form-control" id="editCategoryName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCategoryColor" class="form-label">색상</label>
+                        <input type="color" class="form-control form-control-color" id="editCategoryColor">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="updateCategory()">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 전역 변수
+let statuses = [];
+let tasks = [];
+let categories = [];
+let currentEditingTask = null;
+let currentView = 'kanban'; // 'kanban' 또는 'list'
+let selectedTasks = new Set(); // 선택된 태스크 ID 저장
+let quillEditor = null;
+let isGroupingEnabled = false; // 레이블 그룹핑 활성화 상태
+
+// Quill 에디터 초기화
+function initQuillEditor() {
+    if (typeof Quill !== 'undefined') {
+        quillEditor = new Quill('#taskDescriptionEditor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    ['blockquote', 'code-block'],
+                    [{ 'header': 1 }, { 'header': 2 }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'script': 'sub'}, { 'script': 'super' }],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'align': [] }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            },
+            placeholder: '할일에 대한 자세한 설명을 입력하세요...'
+        });
+        
+        // 에디터 내용 변경 시 hidden textarea 업데이트
+        quillEditor.on('text-change', function() {
+            const html = quillEditor.root.innerHTML;
+            document.getElementById('taskDescription').value = html;
+        });
+    }
+}
+
+// 페이지 로드 시 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('페이지 로드 시작');
+    
+    // Quill 에디터 초기화
+    initQuillEditor();
+    
+    // 기본 상태 생성 (처음 실행 시)
+    createDefaultStatuses().then(() => {
+        loadStatuses();
+        loadCategories();
+        loadTasks();
+    });
+    
+    // 빠른 추가 폼 이벤트 리스너
+    const quickAddForm = document.getElementById('quickAddForm');
+    if (quickAddForm) {
+        quickAddForm.addEventListener('submit', handleQuickAdd);
+    }
+    
+    // 상태 관리 모달 이벤트 리스너
+    const statusModal = document.getElementById('statusModal');
+    if (statusModal) {
+        statusModal.addEventListener('show.bs.modal', async function() {
+            console.log('상태 관리 모달 열림');
+            await reorderStatuses(); // 순서 재정렬
+            loadStatusManagement();
+        });
+    }
+    
+    // 카테고리 관리 모달 이벤트 리스너
+    const categoryModal = document.getElementById('categoryModal');
+    if (categoryModal) {
+        categoryModal.addEventListener('show.bs.modal', function() {
+            console.log('카테고리 관리 모달 열림');
+            loadCategoryManagement();
+        });
+    }
+});
+
+// 기본 상태 생성
+async function createDefaultStatuses() {
+    try {
+        const response = await fetch('/api/statuses');
+        const existingStatuses = await response.json();
+        
+        if (existingStatuses.length === 0) {
+            const defaultStatuses = [
+                { name: 'Backlog', order_index: 1, is_done: false },
+                { name: 'Todo', order_index: 2, is_done: false },
+                { name: 'In Progress', order_index: 3, is_done: false },
+                { name: 'Done', order_index: 4, is_done: true }
+            ];
+            
+            for (const status of defaultStatuses) {
+                await fetch('/api/statuses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(status)
+                });
+            }
+            
+            loadStatuses();
+        }
+    } catch (error) {
+        console.error('기본 상태 생성 실패:', error);
+    }
+}
+
+// 상태 로드
+async function loadStatuses() {
+    try {
+        console.log('상태 로드 시작');
+        const response = await fetch('/api/statuses');
+        statuses = await response.json();
+        console.log('로드된 상태:', statuses);
+        
+        renderKanbanBoard();
+        updateStatusOptions();
+    } catch (error) {
+        console.error('상태 로드 실패:', error);
+    }
+}
+
+// 카테고리 로드
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/categories');
+        categories = await response.json();
+        
+        updateCategoryOptions();
+    } catch (error) {
+        console.error('카테고리 로드 실패:', error);
+    }
+}
+
+// 할일 로드
+async function loadTasks() {
+    try {
+        console.log('할일 로드 시작');
+        const response = await fetch('/api/tasks');
+        tasks = await response.json();
+        console.log('로드된 할일:', tasks);
+        
+        // 완료율 업데이트
+        updateCompletionRate();
+        
+        if (currentView === 'kanban') {
+            renderKanbanBoard();
+        } else {
+            renderListView();
+        }
+    } catch (error) {
+        console.error('할일 로드 실패:', error);
+    }
+}
+
+// 완료율 업데이트 함수 (API 사용)
+async function updateCompletionRate() {
+    try {
+        const response = await fetch('/api/stats/summary');
+        const stats = await response.json();
+        
+        console.log('완료율 API 응답:', stats);
+        
+        // 카운트 업데이트
+        const totalElement = document.getElementById('totalTasksCount');
+        const completedElement = document.getElementById('completedTasksCount');
+        const progressBar = document.getElementById('overallCompletionRate');
+        
+        if (totalElement) totalElement.textContent = stats.total_tasks;
+        if (completedElement) completedElement.textContent = stats.completed_tasks;
+        
+        // 진행률 바 업데이트
+        if (progressBar) {
+            progressBar.style.width = stats.completion_rate + '%';
+            const smallElement = progressBar.querySelector('small');
+            if (smallElement) smallElement.textContent = stats.completion_rate + '%';
+        }
+    } catch (error) {
+        console.error('완료율 업데이트 실패:', error);
+    }
+}
+
+// 칸반보드 렌더링
+function renderKanbanBoard() {
+    console.log('칸반보드 렌더링 시작');
+    console.log('상태 수:', statuses.length);
+    console.log('할일 수:', tasks.length);
+    
+    const kanbanBoard = document.getElementById('kanban-board');
+    kanbanBoard.innerHTML = '';
+    
+    if (statuses.length === 0) {
+        console.log('상태가 없습니다. 대기 중...');
+        return;
+    }
+    
+    if (isGroupingEnabled) {
+        renderGroupedKanbanBoard();
+    } else {
+        renderNormalKanbanBoard();
+    }
+    
+    // 드래그 앤 드롭 초기화
+    initializeDragAndDrop();
+    
+    // 완료율 업데이트
+    updateCompletionRate();
+}
+
+// 일반 칸반보드 렌더링
+function renderNormalKanbanBoard() {
+    const kanbanBoard = document.getElementById('kanban-board');
+    
+    statuses.forEach(status => {
+        const statusTasks = tasks.filter(task => task.status.id === status.id);
+        
+        const column = document.createElement('div');
+        column.className = 'col-md-3 kanban-column';
+        column.innerHTML = `
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">${status.name}</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="sortTasks(${status.id}, 'name', 'asc')">이름 ↑</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortTasks(${status.id}, 'name', 'desc')">이름 ↓</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortTasks(${status.id}, 'created_at', 'asc')">생성일 ↑</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortTasks(${status.id}, 'created_at', 'desc')">생성일 ↓</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortTasks(${status.id}, 'updated_at', 'asc')">변경일 ↑</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortTasks(${status.id}, 'updated_at', 'desc')">변경일 ↓</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortTasks(${status.id}, 'priority', 'asc')">우선순위 ↑</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortTasks(${status.id}, 'priority', 'desc')">우선순위 ↓</a></li>
+                        </ul>
+                    </div>
+                    ${status.is_done ? `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="filterDoneTasks(1)">1일</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterDoneTasks(3)">3일</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterDoneTasks(7)">7일</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterDoneTasks(14)">14일</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterDoneTasks(30)">30일</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterDoneTasks(null)">전체</a></li>
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="card-body task-list" id="status-${status.id}" data-status-id="${status.id}">
+                    ${statusTasks.map(task => createTaskCard(task)).join('')}
+                </div>
+            </div>
+        `;
+        
+        kanbanBoard.appendChild(column);
+    });
+}
+
+// 그룹핑된 칸반보드 렌더링
+function renderGroupedKanbanBoard() {
+    const kanbanBoard = document.getElementById('kanban-board');
+    
+    statuses.forEach(status => {
+        const statusTasks = tasks.filter(task => task.status.id === status.id);
+        const groupedTasks = groupTasksByLabels(statusTasks);
+        
+        const column = document.createElement('div');
+        column.className = 'col-md-3 kanban-column';
+        column.innerHTML = `
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">${status.name}</h5>
+                    <div class="badge bg-secondary">${statusTasks.length}개</div>
+                </div>
+                <div class="card-body task-list" id="status-${status.id}" data-status-id="${status.id}">
+                    ${renderGroupedTasks(groupedTasks)}
+                </div>
+            </div>
+        `;
+        
+        kanbanBoard.appendChild(column);
+    });
+}
+
+// 레이블별로 태스크 그룹핑
+function groupTasksByLabels(tasks) {
+    const groups = {};
+    const ungrouped = [];
+    
+    tasks.forEach(task => {
+        if (task.labels && task.labels.trim()) {
+            const labels = task.labels.split(',').map(label => label.trim());
+            const primaryLabel = labels[0]; // 첫 번째 레이블을 기준으로 그룹핑
+            
+            if (!groups[primaryLabel]) {
+                groups[primaryLabel] = [];
+            }
+            groups[primaryLabel].push(task);
+        } else {
+            ungrouped.push(task);
+        }
+    });
+    
+    return { groups, ungrouped };
+}
+
+// 그룹핑된 태스크 렌더링
+function renderGroupedTasks(groupedTasks) {
+    let html = '';
+    
+    // 레이블 그룹들 렌더링
+    Object.keys(groupedTasks.groups).forEach(label => {
+        const tasks = groupedTasks.groups[label];
+        html += `
+            <div class="label-group mb-3">
+                <div class="label-group-header">
+                    <span class="badge bg-primary label-badge">
+                        <i class="fas fa-tag"></i> ${label}
+                    </span>
+                    <span class="badge bg-secondary ms-1">${tasks.length}개</span>
+                </div>
+                <div class="task-group">
+                    ${tasks.map((task, index) => createGroupedTaskCard(task, index)).join('')}
+                </div>
+            </div>
+        `;
+    });
+    
+    // 레이블 없는 태스크들 렌더링
+    if (groupedTasks.ungrouped.length > 0) {
+        html += `
+            <div class="label-group mb-3">
+                <div class="label-group-header">
+                    <span class="badge bg-secondary label-badge">
+                        <i class="fas fa-inbox"></i> 레이블 없음
+                    </span>
+                    <span class="badge bg-secondary ms-1">${groupedTasks.ungrouped.length}개</span>
+                </div>
+                <div class="task-group">
+                    ${groupedTasks.ungrouped.map((task, index) => createGroupedTaskCard(task, index)).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+// 그룹핑된 태스크 카드 생성 (겹쳐서 보이게)
+function createGroupedTaskCard(task, index) {
+    const priorityColors = {
+        1: 'success',
+        2: 'info',
+        3: 'warning',
+        4: 'danger'
+    };
+    
+    const priorityLabels = {
+        1: '낮음',
+        2: '보통',
+        3: '높음',
+        4: '긴급'
+    };
+    
+    // 카테고리별 테두리 색상
+    const categoryColor = task.category ? task.category.color : '#dee2e6';
+    const borderStyle = task.category ? `border-left: 4px solid ${categoryColor};` : '';
+    
+    // 겹치는 효과를 위한 z-index와 transform 설정
+    const zIndex = 10 - index;
+    const transform = index > 0 ? `translateY(-${index * 15}px)` : '';
+    const marginBottom = index === 0 ? `${(index + 1) * 15}px` : '0px';
+    
+    return `
+        <div class="task-card card mb-1 ${task.is_pinned ? 'pinned' : ''}" 
+             data-task-id="${task.id}" 
+             style="${borderStyle} position: relative; z-index: ${zIndex}; transform: ${transform}; margin-bottom: ${marginBottom};"
+             ondblclick="editTask(${task.id})"
+             title="${task.title} - 더블클릭하여 편집">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h6 class="card-title mb-1 text-truncate" style="font-size: 0.875rem;">${task.title}</h6>
+                    <button class="btn btn-sm ${task.is_pinned ? 'btn-warning' : 'btn-outline-secondary'}" 
+                            onclick="togglePin(${task.id})" title="${task.is_pinned ? '핀고정 해제' : '핀고정'}">
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-${priorityColors[task.priority]}" style="font-size: 0.7rem;">${priorityLabels[task.priority]}</span>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary btn-sm" onclick="editTask(${task.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteTask(${task.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 그룹핑 토글 함수
+function toggleGrouping() {
+    isGroupingEnabled = !isGroupingEnabled;
+    
+    const toggleBtn = document.getElementById('groupToggleBtn');
+    if (isGroupingEnabled) {
+        toggleBtn.classList.add('active');
+        toggleBtn.innerHTML = '<i class="fas fa-layer-group"></i> 그룹핑 해제';
+    } else {
+        toggleBtn.classList.remove('active');
+        toggleBtn.innerHTML = '<i class="fas fa-layer-group"></i> 레이블 그룹핑';
+    }
+    
+    // 칸반보드 다시 렌더링
+    renderKanbanBoard();
+    
+    // 상태 저장
+    localStorage.setItem('isGroupingEnabled', isGroupingEnabled);
+}
+
+// 할일 카드 생성
+function createTaskCard(task) {
+    const priorityColors = {
+        1: 'success',
+        2: 'info',
+        3: 'warning',
+        4: 'danger'
+    };
+    
+    const priorityLabels = {
+        1: '낮음',
+        2: '보통',
+        3: '높음',
+        4: '긴급'
+    };
+    
+    // 날짜 계산
+    const createdDate = new Date(task.created_at);
+    const updatedDate = new Date(task.updated_at);
+    const completedDate = task.completed_at ? new Date(task.completed_at) : null;
+    const now = new Date();
+    
+    // 상태 변경 후 경과 시간 (일)
+    const daysSinceUpdate = Math.floor((now - updatedDate) / (1000 * 60 * 60 * 24));
+    
+    // 오래된 카드 스타일 (진행 전과 완료 상태가 아닌 경우)
+    const isStale = task.status.status_type === 'progress' && !task.status.is_done && daysSinceUpdate > 3;
+    const staleIntensity = Math.min(daysSinceUpdate - 3, 10); // 최대 10일
+    
+    // 카테고리별 테두리 색상
+    const categoryColor = task.category ? task.category.color : '#dee2e6';
+    const borderStyle = task.category ? `border-left: 4px solid ${categoryColor};` : '';
+    
+    return `
+        <div class="task-card card mb-2 ${task.is_pinned ? 'pinned' : ''} ${isStale ? 'stale-card' : ''}" 
+             data-task-id="${task.id}" 
+             data-stale-intensity="${staleIntensity}"
+             style="${borderStyle}"
+             ondblclick="editTask(${task.id})"
+             title="더블클릭하여 편집">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h6 class="card-title">${task.title}</h6>
+                    <button class="btn btn-sm ${task.is_pinned ? 'btn-warning' : 'btn-outline-secondary'}" 
+                            onclick="togglePin(${task.id})" title="${task.is_pinned ? '핀고정 해제' : '핀고정'}">
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                </div>
+                ${task.description ? `<div class="card-text small task-description-text">${task.description.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}</div>` : ''}
+                
+                <!-- 카테고리 표시 -->
+                ${task.category ? `
+                    <div class="mb-2">
+                        <span class="badge" style="background-color: ${task.category.color}; color: white;">
+                            <i class="fas fa-tag"></i> ${task.category.name}
+                        </span>
+                    </div>
+                ` : ''}
+                
+                <!-- 레이블 표시 -->
+                ${task.labels ? `
+                    <div class="mb-2">
+                        ${task.labels.split(',').map(label => `
+                            <span class="badge bg-info me-1" style="font-size: 0.7rem;">
+                                <i class="fas fa-tag"></i> ${label.trim()}
+                            </span>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                <!-- 날짜 정보 -->
+                <div class="card-dates mb-2">
+                    <small class="text-muted">
+                        <div><i class="fas fa-plus-circle"></i> 생성: ${formatDate(createdDate)}</div>
+                        <div><i class="fas fa-edit"></i> 변경: ${formatDate(updatedDate)} (${daysSinceUpdate}일 전)</div>
+                        ${completedDate ? `<div><i class="fas fa-check-circle"></i> 완료: ${formatDate(completedDate)}</div>` : ''}
+                    </small>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-${priorityColors[task.priority]}">${priorityLabels[task.priority]}</span>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="editTask(${task.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="deleteTask(${task.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 날짜 포맷팅 함수
+function formatDate(date) {
+    return date.toLocaleDateString('ko-KR', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// 상대 시간 계산
+function getRelativeTime(timestamp) {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diff = now - time;
+    
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) {
+        return `${days}일 전`;
+    } else if (hours > 0) {
+        return `${hours}시간 전`;
+    } else if (minutes > 0) {
+        return `${minutes}분 전`;
+    } else {
+        return '방금 전';
+    }
+}
+
+// HTML을 텍스트로 변환하는 함수
+function htmlToText(html) {
+    if (!html) return '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || tempDiv.innerText || '';
+}
+
+// 드래그 앤 드롭 초기화
+function initializeDragAndDrop() {
+    document.querySelectorAll('.task-list').forEach(list => {
+        new Sortable(list, {
+            group: 'tasks',
+            animation: 150,
+            onEnd: function(evt) {
+                const taskId = evt.item.dataset.taskId;
+                const newStatusId = evt.to.dataset.statusId;
+                
+                updateTaskStatus(taskId, newStatusId);
+            }
+        });
+    });
+}
+
+// 할일 상태 업데이트
+async function updateTaskStatus(taskId, statusId) {
+    try {
+        const response = await fetch(`/api/tasks/${taskId}/status?status_id=${statusId}`, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            loadTasks();
+        }
+    } catch (error) {
+        console.error('상태 업데이트 실패:', error);
+    }
+}
+
+// 핀고정 토글
+async function togglePin(taskId) {
+    try {
+        const task = tasks.find(t => t.id === taskId);
+        const response = await fetch(`/api/tasks/${taskId}/pin`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                is_pinned: !task.is_pinned
+            })
+        });
+        
+        if (response.ok) {
+            loadTasks();
+        }
+    } catch (error) {
+        console.error('핀고정 토글 실패:', error);
+    }
+}
+
+// 할일 정렬
+async function sortTasks(statusId, sortBy, sortOrder) {
+    try {
+        const response = await fetch(`/api/tasks?status_id=${statusId}&sort_by=${sortBy}&sort_order=${sortOrder}`);
+        const sortedTasks = await response.json();
+        
+        // 해당 상태의 할일만 업데이트
+        tasks = tasks.filter(task => task.status.id !== statusId).concat(sortedTasks);
+        
+        renderKanbanBoard();
+    } catch (error) {
+        console.error('정렬 실패:', error);
+    }
+}
+
+// 완료 단계 필터링
+async function filterDoneTasks(days) {
+    try {
+        const doneStatus = statuses.find(s => s.is_done);
+        if (!doneStatus) return;
+        
+        const url = days 
+            ? `/api/tasks?status_id=${doneStatus.id}&days_filter=${days}`
+            : `/api/tasks?status_id=${doneStatus.id}`;
+        
+        const response = await fetch(url);
+        const filteredTasks = await response.json();
+        
+        // Done 상태의 할일만 업데이트
+        tasks = tasks.filter(task => task.status.id !== doneStatus.id).concat(filteredTasks);
+        
+        renderKanbanBoard();
+    } catch (error) {
+        console.error('필터링 실패:', error);
+    }
+}
+
+// 할일 저장
+async function saveTask() {
+    const taskId = document.getElementById('taskId').value;
+    const categoryId = document.getElementById('taskCategory').value;
+    const taskData = {
+        title: document.getElementById('taskTitle').value,
+        description: document.getElementById('taskDescription').value,
+        priority: parseInt(document.getElementById('taskPriority').value),
+        status_id: parseInt(document.getElementById('taskStatus').value),
+        category_id: categoryId ? parseInt(categoryId) : null,
+        labels: document.getElementById('taskLabels').value.trim() || null
+    };
+    
+    try {
+        const url = taskId ? `/api/tasks/${taskId}` : '/api/tasks';
+        const method = taskId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(taskData)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskId').value = '';
+            loadTasks();
+        }
+    } catch (error) {
+        console.error('할일 저장 실패:', error);
+    }
+}
+
+// 할일 편집
+function editTask(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    
+    document.getElementById('taskId').value = task.id;
+    document.getElementById('taskTitle').value = task.title;
+    document.getElementById('taskDescription').value = task.description || '';
+    document.getElementById('taskPriority').value = task.priority;
+    document.getElementById('taskStatus').value = task.status.id;
+    document.getElementById('taskCategory').value = task.category ? task.category.id : '';
+    document.getElementById('taskLabels').value = task.labels || '';
+    
+    // 레이블 입력 필드에 자동완성 기능 추가 (선택사항)
+    if (task.labels) {
+        const labels = task.labels.split(',').map(label => label.trim());
+        // 기존 레이블들을 기반으로 자동완성 설정 가능
+    }
+    
+    // Quill 에디터에 내용 로드
+    if (quillEditor) {
+        if (task.description) {
+            quillEditor.root.innerHTML = task.description;
+        } else {
+            quillEditor.setContents([]);
+        }
+    }
+    
+    document.querySelector('#taskModal .modal-title').textContent = '할일 수정';
+    
+    new bootstrap.Modal(document.getElementById('taskModal')).show();
+}
+
+// 할일 삭제
+async function deleteTask(taskId) {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    
+    try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            loadTasks();
+        }
+    } catch (error) {
+        console.error('할일 삭제 실패:', error);
+    }
+}
+
+// 상태 옵션 업데이트
+function updateStatusOptions() {
+    const statusSelect = document.getElementById('taskStatus');
+    statusSelect.innerHTML = '';
+    
+    statuses.forEach(status => {
+        const option = document.createElement('option');
+        option.value = status.id;
+        option.textContent = status.name;
+        statusSelect.appendChild(option);
+    });
+}
+
+// 카테고리 옵션 업데이트
+function updateCategoryOptions() {
+    const categorySelect = document.getElementById('taskCategory');
+    if (!categorySelect) return;
+    
+    categorySelect.innerHTML = '<option value="">카테고리 없음</option>';
+    
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        option.style.color = category.color;
+        categorySelect.appendChild(option);
+    });
+}
+
+
+
+// 빠른 추가 처리
+async function handleQuickAdd(event) {
+    event.preventDefault();
+    
+    const titleInput = document.getElementById('quickTaskTitle');
+    const title = titleInput.value.trim();
+    
+    if (!title) {
+        alert('할일 제목을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        // 첫 번째 상태(보통 Todo 또는 Backlog)를 기본값으로 사용
+        const defaultStatus = statuses.find(s => !s.is_done) || statuses[0];
+        
+        if (!defaultStatus) {
+            alert('상태를 먼저 생성해주세요.');
+            return;
+        }
+        
+        const taskData = {
+            title: title,
+            description: '',
+            priority: 2, // 기본 우선순위: 보통
+            status_id: defaultStatus.id
+        };
+        
+        const response = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(taskData)
+        });
+        
+        if (response.ok) {
+            titleInput.value = '';
+            loadTasks();
+            showNotification('할일이 추가되었습니다!', 'success');
+        } else {
+            throw new Error('할일 추가에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('빠른 추가 실패:', error);
+        alert('할일 추가에 실패했습니다. 다시 시도해주세요.');
+    }
+}
+
+// 상태 관리 함수들
+async function loadStatusManagement() {
+    try {
+        console.log('상태 관리 데이터 로드 시작');
+        const [statusResponse, taskResponse] = await Promise.all([
+            fetch('/api/statuses'),
+            fetch('/api/tasks')
+        ]);
+        
+        const statusData = await statusResponse.json();
+        const taskData = await taskResponse.json();
+        
+        console.log('상태 관리 데이터:', statusData);
+        console.log('할일 데이터:', taskData);
+        
+        renderStatusTable(statusData, taskData);
+    } catch (error) {
+        console.error('상태 관리 로드 실패:', error);
+    }
+}
+
+function renderStatusTable(statusData, taskData) {
+    console.log('상태 테이블 렌더링 시작');
+    const tbody = document.getElementById('statusTableBody');
+    if (!tbody) {
+        console.error('statusTableBody 요소를 찾을 수 없습니다');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    console.log('렌더링할 상태 수:', statusData.length);
+    
+    statusData.forEach(status => {
+        const taskCount = taskData.filter(task => task.status.id === status.id).length;
+        const canDelete = taskCount === 0;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <span class="badge bg-secondary">${status.order_index}</span>
+            </td>
+            <td>
+                <strong>${status.name}</strong>
+            </td>
+            <td>
+                <span class="badge ${getStatusTypeBadge(status)}">
+                    ${getStatusTypeLabel(status)}
+                </span>
+            </td>
+            <td>
+                <span class="badge bg-info">${taskCount}개</span>
+            </td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="editStatus(${status.id})" title="편집">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="moveStatusUp(${status.id})" title="위로">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="moveStatusDown(${status.id})" title="아래로">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                    <button class="btn btn-outline-danger ${!canDelete ? 'disabled' : ''}" 
+                            onclick="deleteStatus(${status.id})" 
+                            title="${canDelete ? '삭제' : '할일이 있어 삭제할 수 없습니다'}"
+                            ${!canDelete ? 'disabled' : ''}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// 상태 타입 배지 클래스 반환
+function getStatusTypeBadge(status) {
+    console.log('Status:', status);
+    if (status.status_type === 'pending') return 'bg-secondary';
+    if (status.status_type === 'done' || status.is_done) return 'bg-success';
+    return 'bg-primary';
+}
+
+// 상태 타입 라벨 반환
+function getStatusTypeLabel(status) {
+    if (status.status_type === 'pending') return '진행 전';
+    if (status.status_type === 'done' || status.is_done) return '완료';
+    return '진행 중';
+}
+
+async function addNewStatus() {
+    const name = document.getElementById('newStatusName').value.trim();
+    const statusType = document.getElementById('newStatusType').value;
+    
+    if (!name) {
+        alert('상태명을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/statuses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                status_type: statusType,
+                is_done: statusType === 'done'
+            })
+        });
+        
+        if (response.ok) {
+            document.getElementById('newStatusName').value = '';
+            document.getElementById('newStatusType').value = 'pending';
+            loadStatusManagement();
+            loadStatuses(); // 칸반보드 업데이트
+            showNotification('상태가 추가되었습니다!', 'success');
+        } else {
+            let errorMessage = '상태 추가에 실패했습니다.';
+            try {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const error = await response.json();
+                    errorMessage = error.detail || errorMessage;
+                } else {
+                    const errorText = await response.text();
+                    console.error('서버 에러:', errorText);
+                    errorMessage = `서버 에러 (${response.status}): ${response.statusText}`;
+                }
+            } catch (parseError) {
+                console.error('에러 파싱 실패:', parseError);
+                errorMessage = `서버 에러 (${response.status}): ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+    } catch (error) {
+        console.error('상태 추가 실패:', error);
+        alert('상태 추가에 실패했습니다: ' + error.message);
+    }
+}
+
+async function editStatus(statusId) {
+    try {
+        const response = await fetch(`/api/statuses/${statusId}`);
+        const status = await response.json();
+        
+        document.getElementById('editStatusId').value = status.id;
+        document.getElementById('editStatusName').value = status.name;
+        document.getElementById('editStatusType').value = status.status_type || (status.is_done ? 'true' : 'false');
+        document.getElementById('editStatusOrder').value = status.order_index;
+        
+        new bootstrap.Modal(document.getElementById('editStatusModal')).show();
+    } catch (error) {
+        console.error('상태 조회 실패:', error);
+        alert('상태 정보를 불러오는데 실패했습니다.');
+    }
+}
+
+async function updateStatus() {
+    const statusId = document.getElementById('editStatusId').value;
+    const name = document.getElementById('editStatusName').value.trim();
+    const statusType = document.getElementById('editStatusType').value;
+    const orderIndex = parseInt(document.getElementById('editStatusOrder').value);
+    
+    if (!name) {
+        alert('상태명을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/statuses/${statusId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                status_type: statusType,
+                is_done: statusType === 'done',
+                order_index: orderIndex
+            })
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('editStatusModal')).hide();
+            loadStatusManagement();
+            loadStatuses(); // 칸반보드 업데이트
+            showNotification('상태가 수정되었습니다!', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.detail || '상태 수정에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('상태 수정 실패:', error);
+        alert('상태 수정에 실패했습니다: ' + error.message);
+    }
+}
+
+async function deleteStatus(statusId) {
+    if (!confirm('정말 이 상태를 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/statuses/${statusId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            loadStatusManagement();
+            loadStatuses(); // 칸반보드 업데이트
+            showNotification('상태가 삭제되었습니다!', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.detail || '상태 삭제에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('상태 삭제 실패:', error);
+        alert('상태 삭제에 실패했습니다: ' + error.message);
+    }
+}
+
+async function moveStatusUp(statusId) {
+    try {
+        console.log('Moving status up:', statusId);
+        
+        // 최신 상태 데이터 가져오기
+        const response = await fetch('/api/statuses');
+        const currentStatuses = await response.json();
+        
+        // 현재 상태 찾기
+        const currentStatus = currentStatuses.find(s => s.id === statusId);
+        if (!currentStatus) {
+            console.error('상태를 찾을 수 없습니다');
+            return;
+        }
+        
+        // 순서대로 정렬
+        const sortedStatuses = currentStatuses.sort((a, b) => a.order_index - b.order_index);
+        const currentIndex = sortedStatuses.findIndex(s => s.id === statusId);
+        
+        if (currentIndex <= 0) {
+            console.log('이미 첫 번째 상태입니다');
+            return;
+        }
+        
+        // 위의 상태와 순서 바꾸기
+        const targetStatus = sortedStatuses[currentIndex - 1];
+        const tempOrder = currentStatus.order_index;
+        
+        await updateStatusOrder(statusId, targetStatus.order_index);
+        await updateStatusOrder(targetStatus.id, tempOrder);
+        
+    } catch (error) {
+        console.error('상태 이동 실패:', error);
+    }
+}
+
+async function moveStatusDown(statusId) {
+    try {
+        console.log('Moving status down:', statusId);
+        
+        // 최신 상태 데이터 가져오기
+        const response = await fetch('/api/statuses');
+        const currentStatuses = await response.json();
+        
+        // 현재 상태 찾기
+        const currentStatus = currentStatuses.find(s => s.id === statusId);
+        if (!currentStatus) {
+            console.error('상태를 찾을 수 없습니다');
+            return;
+        }
+        
+        // 순서대로 정렬
+        const sortedStatuses = currentStatuses.sort((a, b) => a.order_index - b.order_index);
+        const currentIndex = sortedStatuses.findIndex(s => s.id === statusId);
+        
+        if (currentIndex >= sortedStatuses.length - 1) {
+            console.log('이미 마지막 상태입니다');
+            return;
+        }
+        
+        // 아래의 상태와 순서 바꾸기
+        const targetStatus = sortedStatuses[currentIndex + 1];
+        const tempOrder = currentStatus.order_index;
+        
+        await updateStatusOrder(statusId, targetStatus.order_index);
+        await updateStatusOrder(targetStatus.id, tempOrder);
+        
+    } catch (error) {
+        console.error('상태 이동 실패:', error);
+    }
+}
+
+async function updateStatusOrder(statusId, newOrder) {
+    try {
+        const response = await fetch(`/api/statuses/${statusId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                order_index: newOrder
+            })
+        });
+        
+        if (response.ok) {
+            loadStatusManagement();
+            loadStatuses(); // 칸반보드 업데이트
+        }
+    } catch (error) {
+        console.error('순서 업데이트 실패:', error);
+    }
+}
+
+// 상태 순서 재정렬 함수
+async function reorderStatuses() {
+    try {
+        console.log('상태 순서 재정렬 시작');
+        
+        const response = await fetch('/api/statuses');
+        const statuses = await response.json();
+        
+        // 순서대로 정렬
+        const sortedStatuses = statuses.sort((a, b) => a.order_index - b.order_index);
+        
+        // 순서 인덱스 재설정
+        for (let i = 0; i < sortedStatuses.length; i++) {
+            const newOrder = i + 1;
+            if (sortedStatuses[i].order_index !== newOrder) {
+                await fetch(`/api/statuses/${sortedStatuses[i].id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        order_index: newOrder
+                    })
+                });
+            }
+        }
+        
+        console.log('상태 순서 재정렬 완료');
+    } catch (error) {
+        console.error('상태 순서 재정렬 실패:', error);
+    }
+}
+
+async function saveStatusOrder() {
+    // 현재 테이블 순서대로 order_index 업데이트
+    const rows = document.querySelectorAll('#statusTableBody tr');
+    const updates = [];
+    
+    rows.forEach((row, index) => {
+        const statusId = row.querySelector('button[onclick*="editStatus"]').getAttribute('onclick').match(/\d+/)[0];
+        updates.push({
+            id: parseInt(statusId),
+            order_index: index + 1
+        });
+    });
+    
+    try {
+        for (const update of updates) {
+            await fetch(`/api/statuses/${update.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    order_index: update.order_index
+                })
+            });
+        }
+        
+        loadStatusManagement();
+        loadStatuses(); // 칸반보드 업데이트
+        showNotification('순서가 저장되었습니다!', 'success');
+    } catch (error) {
+        console.error('순서 저장 실패:', error);
+        alert('순서 저장에 실패했습니다.');
+    }
+}
+
+// 카테고리 관리 함수들
+async function loadCategoryManagement() {
+    try {
+        const [categoryResponse, taskResponse] = await Promise.all([
+            fetch('/api/categories'),
+            fetch('/api/tasks')
+        ]);
+        
+        const categoryData = await categoryResponse.json();
+        const taskData = await taskResponse.json();
+        
+        renderCategoryTable(categoryData, taskData);
+    } catch (error) {
+        console.error('카테고리 관리 로드 실패:', error);
+    }
+}
+
+function renderCategoryTable(categoryData, taskData) {
+    const tbody = document.getElementById('categoryTableBody');
+    tbody.innerHTML = '';
+    
+    categoryData.forEach(category => {
+        const taskCount = taskData.filter(task => task.category && task.category.id === category.id).length;
+        const canDelete = taskCount === 0;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <div style="width: 30px; height: 20px; background-color: ${category.color}; border-radius: 4px; border: 1px solid #ddd;"></div>
+            </td>
+            <td>
+                <strong>${category.name}</strong>
+            </td>
+            <td>
+                <span class="badge bg-info">${taskCount}개</span>
+            </td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="editCategory(${category.id})" title="편집">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger ${!canDelete ? 'disabled' : ''}" 
+                            onclick="deleteCategory(${category.id})" 
+                            title="${canDelete ? '삭제' : '할일이 있어 삭제할 수 없습니다'}"
+                            ${!canDelete ? 'disabled' : ''}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+async function addNewCategory() {
+    const name = document.getElementById('newCategoryName').value.trim();
+    const color = document.getElementById('newCategoryColor').value;
+    
+    if (!name) {
+        alert('카테고리명을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                color: color
+            })
+        });
+        
+        if (response.ok) {
+            document.getElementById('newCategoryName').value = '';
+            document.getElementById('newCategoryColor').value = '#007bff';
+            loadCategoryManagement();
+            loadCategories(); // 옵션 업데이트
+            showNotification('카테고리가 추가되었습니다!', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.detail || '카테고리 추가에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('카테고리 추가 실패:', error);
+        alert('카테고리 추가에 실패했습니다: ' + error.message);
+    }
+}
+
+async function editCategory(categoryId) {
+    try {
+        const response = await fetch(`/api/categories/${categoryId}`);
+        const category = await response.json();
+        
+        document.getElementById('editCategoryId').value = category.id;
+        document.getElementById('editCategoryName').value = category.name;
+        document.getElementById('editCategoryColor').value = category.color;
+        
+        new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+    } catch (error) {
+        console.error('카테고리 조회 실패:', error);
+        alert('카테고리 정보를 불러오는데 실패했습니다.');
+    }
+}
+
+async function updateCategory() {
+    const categoryId = document.getElementById('editCategoryId').value;
+    const name = document.getElementById('editCategoryName').value.trim();
+    const color = document.getElementById('editCategoryColor').value;
+    
+    if (!name) {
+        alert('카테고리명을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/categories/${categoryId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                color: color
+            })
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
+            loadCategoryManagement();
+            loadCategories(); // 옵션 업데이트
+            loadTasks(); // 칸반보드 업데이트
+            showNotification('카테고리가 수정되었습니다!', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.detail || '카테고리 수정에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('카테고리 수정 실패:', error);
+        alert('카테고리 수정에 실패했습니다: ' + error.message);
+    }
+}
+
+async function deleteCategory(categoryId) {
+    if (!confirm('정말 이 카테고리를 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/categories/${categoryId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            loadCategoryManagement();
+            loadCategories(); // 옵션 업데이트
+            loadTasks(); // 칸반보드 업데이트
+            showNotification('카테고리가 삭제되었습니다!', 'success');
+        } else {
+            const error = await response.json();
+            throw new Error(error.detail || '카테고리 삭제에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('카테고리 삭제 실패:', error);
+        alert('카테고리 삭제에 실패했습니다: ' + error.message);
+    }
+}
+
+// 상태 관리 모달 열릴 때 데이터 로드
+// 모달 이벤트 리스너
+document.getElementById('taskModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('taskForm').reset();
+    document.getElementById('taskId').value = '';
+    document.querySelector('#taskModal .modal-title').textContent = '할일 추가';
+});
+
+// 뷰 전환 함수
+function switchView(view) {
+    currentView = view;
+    
+    const kanbanBoard = document.getElementById('kanban-board');
+    const listView = document.getElementById('list-view');
+    const kanbanBtn = document.getElementById('kanbanViewBtn');
+    const listBtn = document.getElementById('listViewBtn');
+    const viewTitle = document.getElementById('viewTitle');
+    const groupToggleContainer = document.getElementById('groupToggleContainer');
+    
+    if (view === 'kanban') {
+        kanbanBoard.style.display = 'flex';
+        kanbanBoard.style.flexWrap = 'wrap';
+        listView.style.display = 'none';
+        kanbanBtn.classList.add('active');
+        listBtn.classList.remove('active');
+        viewTitle.textContent = '칸반보드';
+        groupToggleContainer.style.display = 'block'; // 칸반 뷰에서만 그룹핑 버튼 표시
+        renderKanbanBoard();
+    } else {
+        kanbanBoard.style.display = 'none';
+        listView.style.display = 'block';
+        kanbanBtn.classList.remove('active');
+        listBtn.classList.add('active');
+        viewTitle.textContent = '리스트 뷰';
+        groupToggleContainer.style.display = 'none'; // 리스트 뷰에서는 그룹핑 버튼 숨김
+        renderListView();
+    }
+    
+    // 뷰 상태 저장
+    localStorage.setItem('currentView', view);
+}
+
+// 리스트 뷰 렌더링
+function renderListView() {
+    console.log('리스트 뷰 렌더링 시작');
+    
+    // 필터 옵션 업데이트
+    updateListFilterOptions();
+    
+    // 태스크 필터링 및 정렬
+    const filteredTasks = getFilteredAndSortedTasks();
+    
+    const tbody = document.getElementById('listTasksBody');
+    tbody.innerHTML = '';
+    
+    if (filteredTasks.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p>표시할 할일이 없습니다.</p>
+                </td>
+            </tr>
+        `;
+        updateListTaskCount(0);
+        return;
+    }
+    
+    filteredTasks.forEach(task => {
+        const row = createListTaskRow(task);
+        tbody.appendChild(row);
+    });
+    
+    updateListTaskCount(filteredTasks.length);
+    
+    // 이벤트 리스너 추가
+    setupListViewEventListeners();
+    
+    // 완료율 업데이트
+    updateCompletionRate();
+}
+
+// 리스트 태스크 행 생성
+function createListTaskRow(task) {
+    const row = document.createElement('tr');
+    row.className = task.is_pinned ? 'table-warning' : '';
+    row.dataset.taskId = task.id;
+    
+    // 더블클릭 이벤트 추가
+    row.addEventListener('dblclick', function(e) {
+        // 체크박스나 버튼 클릭 시에는 편집 모드로 진입하지 않음
+        if (e.target.type === 'checkbox' || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+            return;
+        }
+        editTask(task.id);
+    });
+    
+    // 행에 hover 효과를 위한 클래스 추가
+    row.style.cursor = 'pointer';
+    row.title = '더블클릭하여 편집';
+    
+    const priorityColors = {
+        1: 'success',
+        2: 'info', 
+        3: 'warning',
+        4: 'danger'
+    };
+    
+    const priorityLabels = {
+        1: '낮음',
+        2: '보통',
+        3: '높음',
+        4: '긴급'
+    };
+    
+    const categoryBadge = task.category 
+        ? `<span class="badge" style="background-color: ${task.category.color}; color: white;">
+             <i class="fas fa-tag"></i> ${task.category.name}
+           </span>`
+        : '<span class="text-muted">없음</span>';
+    
+    const statusBadge = getStatusBadge(task.status);
+    
+    row.innerHTML = `
+        <td>
+            <input type="checkbox" class="form-check-input task-checkbox" 
+                   value="${task.id}" onchange="toggleTaskSelection(${task.id})">
+        </td>
+        <td class="text-center">
+            <button class="btn btn-sm ${task.is_pinned ? 'btn-warning' : 'btn-outline-secondary'}" 
+                    onclick="togglePin(${task.id})" title="${task.is_pinned ? '핀고정 해제' : '핀고정'}">
+                <i class="fas fa-thumbtack"></i>
+            </button>
+        </td>
+        <td>
+            <div class="fw-bold">${task.title}</div>
+            ${task.description ? `<div class="text-muted task-description-text" style="font-size: 0.8rem;">${task.description.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}</div>` : ''}
+            ${task.labels ? `<div class="mt-1">${task.labels.split(',').map(label => `<span class="badge bg-info me-1" style="font-size: 0.65rem;"><i class="fas fa-tag"></i> ${label.trim()}</span>`).join('')}</div>` : ''}
+        </td>
+        <td>${statusBadge}</td>
+        <td>${categoryBadge}</td>
+        <td>
+            <span class="badge bg-${priorityColors[task.priority]}">${priorityLabels[task.priority]}</span>
+        </td>
+        <td>
+            <small class="text-muted">${formatDate(new Date(task.created_at))}</small>
+        </td>
+        <td>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" onclick="editTask(${task.id})" title="편집">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-outline-danger" onclick="deleteTask(${task.id})" title="삭제">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    `;
+    
+    return row;
+}
+
+// 상태 배지 생성
+function getStatusBadge(status) {
+    let badgeClass = 'bg-secondary';
+    
+    if (status.status_type === 'pending') {
+        badgeClass = 'bg-secondary';
+    } else if (status.status_type === 'done' || status.is_done) {
+        badgeClass = 'bg-success';
+    } else {
+        badgeClass = 'bg-primary';
+    }
+    
+    return `<span class="badge ${badgeClass}">${status.name}</span>`;
+}
+
+// 필터 옵션 업데이트
+function updateListFilterOptions() {
+    // 상태 필터
+    const statusFilter = document.getElementById('listStatusFilter');
+    if (statusFilter) {
+        statusFilter.innerHTML = '<option value="">모든 상태</option>';
+        statuses.forEach(status => {
+            const option = document.createElement('option');
+            option.value = status.id;
+            option.textContent = status.name;
+            statusFilter.appendChild(option);
+        });
+    }
+    
+    // 카테고리 필터
+    const categoryFilter = document.getElementById('listCategoryFilter');
+    if (categoryFilter) {
+        categoryFilter.innerHTML = '<option value="">모든 카테고리</option>';
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            categoryFilter.appendChild(option);
+        });
+    }
+}
+
+// 필터링 및 정렬된 태스크 가져오기
+function getFilteredAndSortedTasks() {
+    let filteredTasks = [...tasks];
+    
+    // 상태 필터
+    const statusFilter = document.getElementById('listStatusFilter');
+    if (statusFilter && statusFilter.value) {
+        filteredTasks = filteredTasks.filter(task => task.status.id == statusFilter.value);
+    }
+    
+    // 카테고리 필터
+    const categoryFilter = document.getElementById('listCategoryFilter');
+    if (categoryFilter && categoryFilter.value) {
+        filteredTasks = filteredTasks.filter(task => task.category && task.category.id == categoryFilter.value);
+    }
+    
+    // 우선순위 필터
+    const priorityFilter = document.getElementById('listPriorityFilter');
+    if (priorityFilter && priorityFilter.value) {
+        filteredTasks = filteredTasks.filter(task => task.priority == priorityFilter.value);
+    }
+    
+    // 정렬 (핀고정 우선 정렬)
+    const sortBy = document.getElementById('listSortBy')?.value || 'created_at';
+    const sortOrder = document.getElementById('listSortOrder')?.value || 'desc';
+    
+    filteredTasks.sort((a, b) => {
+        // 핀고정 우선 정렬
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        
+        // 핀고정 상태가 같으면 선택된 정렬 기준 적용
+        let aValue, bValue;
+        
+        switch (sortBy) {
+            case 'title':
+                aValue = a.title.toLowerCase();
+                bValue = b.title.toLowerCase();
+                break;
+            case 'priority':
+                aValue = a.priority;
+                bValue = b.priority;
+                break;
+            case 'created_at':
+                aValue = new Date(a.created_at);
+                bValue = new Date(b.created_at);
+                break;
+            case 'updated_at':
+                aValue = new Date(a.updated_at);
+                bValue = new Date(b.updated_at);
+                break;
+            default:
+                aValue = a[sortBy];
+                bValue = b[sortBy];
+        }
+        
+        if (sortOrder === 'asc') {
+            return aValue > bValue ? 1 : -1;
+        } else {
+            return aValue < bValue ? 1 : -1;
+        }
+    });
+    
+    return filteredTasks;
+}
+
+// 태스크 선택 토글
+function toggleTaskSelection(taskId) {
+    if (selectedTasks.has(taskId)) {
+        selectedTasks.delete(taskId);
+    } else {
+        selectedTasks.add(taskId);
+    }
+    
+    updateSelectionUI();
+}
+
+// 전체 선택 토글
+function toggleAllTaskSelection() {
+    const checkboxes = document.querySelectorAll('.task-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllTasks');
+    
+    if (selectAllCheckbox.checked) {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+            selectedTasks.add(parseInt(checkbox.value));
+        });
+    } else {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        selectedTasks.clear();
+    }
+    
+    updateSelectionUI();
+}
+
+// 선택 UI 업데이트
+function updateSelectionUI() {
+    const selectedCount = selectedTasks.size;
+    const selectedCountSpan = document.getElementById('listSelectedCount');
+    const bulkActions = document.getElementById('listBulkActions');
+    
+    if (selectedCount > 0) {
+        selectedCountSpan.textContent = `${selectedCount}개 선택됨`;
+        selectedCountSpan.style.display = 'inline';
+        bulkActions.style.display = 'block';
+    } else {
+        selectedCountSpan.style.display = 'none';
+        bulkActions.style.display = 'none';
+    }
+}
+
+// 태스크 수 업데이트
+function updateListTaskCount(count) {
+    const countElement = document.getElementById('listTaskCount');
+    if (countElement) {
+        countElement.textContent = `${count}개 항목`;
+    }
+}
+
+// 리스트 뷰 이벤트 리스너 설정
+function setupListViewEventListeners() {
+    // 필터 변경 이벤트
+    ['listStatusFilter', 'listCategoryFilter', 'listPriorityFilter', 'listSortBy', 'listSortOrder'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.removeEventListener('change', renderListView);
+            element.addEventListener('change', renderListView);
+        }
+    });
+    
+    // 전체 선택 체크박스
+    const selectAllCheckbox = document.getElementById('selectAllTasks');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.removeEventListener('change', toggleAllTaskSelection);
+        selectAllCheckbox.addEventListener('change', toggleAllTaskSelection);
+    }
+}
+
+// 일괄 상태 변경
+function bulkUpdateStatus() {
+    if (selectedTasks.size === 0) {
+        alert('변경할 할일을 선택해주세요.');
+        return;
+    }
+    
+    const statusId = prompt('변경할 상태 ID를 입력하세요:');
+    if (statusId && statuses.find(s => s.id == statusId)) {
+        selectedTasks.forEach(async taskId => {
+            await updateTaskStatus(taskId, statusId);
+        });
+        
+        selectedTasks.clear();
+        loadTasks();
+        updateSelectionUI();
+    }
+}
+
+// 일괄 삭제
+function bulkDeleteTasks() {
+    if (selectedTasks.size === 0) {
+        alert('삭제할 할일을 선택해주세요.');
+        return;
+    }
+    
+    if (confirm(`선택한 ${selectedTasks.size}개의 할일을 삭제하시겠습니까?`)) {
+        selectedTasks.forEach(async taskId => {
+            await deleteTask(taskId);
+        });
+        
+        selectedTasks.clear();
+        loadTasks();
+        updateSelectionUI();
+    }
+}
+
+// 페이지 로드 시 저장된 뷰 복원
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const savedView = localStorage.getItem('currentView') || 'kanban';
+        const savedGrouping = localStorage.getItem('isGroupingEnabled') === 'true';
+        
+        // 그룹핑 상태 복원
+        isGroupingEnabled = savedGrouping;
+        const groupToggleBtn = document.getElementById('groupToggleBtn');
+        if (isGroupingEnabled) {
+            groupToggleBtn.classList.add('active');
+            groupToggleBtn.innerHTML = '<i class="fas fa-layer-group"></i> 그룹핑 해제';
+        }
+        
+        if (savedView === 'list') {
+            switchView('list');
+        }
+    }, 100);
+});
+</script>
+{% endblock %}

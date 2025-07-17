@@ -1,3 +1,15 @@
 
 # YoYo AI version control directory
 .yoyo/
+.claude/
+.vscode/
+.logs/
+test_env/
+venv/
+install_service.py
+PRD.md
+test_logging.py
+todo_bak.db
+todo_bak2.db
+todo.db
+todo2.zi

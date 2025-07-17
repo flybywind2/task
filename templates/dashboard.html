@@ -1,0 +1,653 @@
+{% extends "base.html" %}
+
+{% block title %}대시보드 - 할일 관리{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>대시보드</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">전체 할일</h5>
+                <h2 class="text-primary" id="totalTasks">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">완료된 할일</h5>
+                <h2 class="text-success" id="completedTasks">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">미완료 할일</h5>
+                <h2 class="text-warning" id="incompleteTasks">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">핀고정 할일</h5>
+                <h2 class="text-info" id="pinnedTasks">0</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">전체 완료율</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" id="completionRate" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">카테고리별 현황</h5>
+            </div>
+            <div class="card-body">
+                <div id="categoryStats">
+                    <!-- 카테고리별 통계가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">상태별 할일 현황</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">카테고리별 할일</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">일별 통계</h5>
+                <select class="form-select form-select-sm" id="periodSelect" style="width: auto;">
+                    <option value="7">7일</option>
+                    <option value="14">14일</option>
+                    <option value="30" selected>30일</option>
+                    <option value="90">90일</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">누적 통계</h5>
+                <select class="form-select form-select-sm" id="cumulativePeriodSelect" style="width: auto;">
+                    <option value="7">7일</option>
+                    <option value="14">14일</option>
+                    <option value="30" selected>30일</option>
+                    <option value="90">90일</option>
+                    <option value="180">180일</option>
+                    <option value="365">1년</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <canvas id="cumulativeChart" style="height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">최근 활동</h5>
+            </div>
+            <div class="card-body">
+                <div id="recentActivities">
+                    <!-- 최근 활동 내역이 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let statusChart, dailyChart, cumulativeChart, categoryChart;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSummaryStats();
+    loadCategoryStats();
+    loadDailyStats();
+    loadCumulativeStats();
+    loadRecentActivities();
+    
+    // 기간 선택 변경 이벤트
+    document.getElementById('periodSelect').addEventListener('change', function() {
+        loadDailyStats();
+    });
+    
+    // 누적 통계 기간 선택 변경 이벤트
+    document.getElementById('cumulativePeriodSelect').addEventListener('change', function() {
+        loadCumulativeStats();
+    });
+});
+
+// 요약 통계 로드
+async function loadSummaryStats() {
+    try {
+        const response = await fetch('/api/stats/summary');
+        const stats = await response.json();
+        
+        document.getElementById('totalTasks').textContent = stats.total_tasks;
+        document.getElementById('completedTasks').textContent = stats.completed_tasks;
+        document.getElementById('incompleteTasks').textContent = stats.incomplete_tasks;
+        document.getElementById('pinnedTasks').textContent = stats.pinned_tasks;
+        
+        // 완료율 업데이트
+        const completionRate = stats.completion_rate;
+        const progressBar = document.getElementById('completionRate');
+        progressBar.style.width = completionRate + '%';
+        progressBar.textContent = completionRate + '%';
+        
+        // 상태별 차트 업데이트
+        updateStatusChart(stats.status_breakdown);
+        
+    } catch (error) {
+        console.error('요약 통계 로드 실패:', error);
+    }
+}
+
+// 카테고리 통계 로드
+async function loadCategoryStats() {
+    try {
+        const [tasksResponse, categoriesResponse] = await Promise.all([
+            fetch('/api/tasks'),
+            fetch('/api/categories')
+        ]);
+        
+        const tasks = await tasksResponse.json();
+        const categories = await categoriesResponse.json();
+        
+        // 카테고리별 통계 계산
+        const categoryStats = calculateCategoryStats(tasks, categories);
+        
+        // 카테고리별 현황 표시
+        updateCategoryStats(categoryStats);
+        
+        // 카테고리별 차트 업데이트
+        updateCategoryChart(categoryStats);
+        
+    } catch (error) {
+        console.error('카테고리 통계 로드 실패:', error);
+    }
+}
+
+function calculateCategoryStats(tasks, categories) {
+    const stats = [];
+    
+    // 카테고리별 통계
+    categories.forEach(category => {
+        const categoryTasks = tasks.filter(task => task.category && task.category.id === category.id);
+        const completedTasks = categoryTasks.filter(task => task.completed_at);
+        const completionRate = categoryTasks.length > 0 ? (completedTasks.length / categoryTasks.length * 100) : 0;
+        
+        stats.push({
+            id: category.id,
+            name: category.name,
+            color: category.color,
+            total: categoryTasks.length,
+            completed: completedTasks.length,
+            completionRate: Math.round(completionRate)
+        });
+    });
+    
+    // 카테고리 없음
+    const uncategorizedTasks = tasks.filter(task => !task.category);
+    const uncategorizedCompleted = uncategorizedTasks.filter(task => task.completed_at);
+    const uncategorizedRate = uncategorizedTasks.length > 0 ? (uncategorizedCompleted.length / uncategorizedTasks.length * 100) : 0;
+    
+    if (uncategorizedTasks.length > 0) {
+        stats.push({
+            id: null,
+            name: '카테고리 없음',
+            color: '#6c757d',
+            total: uncategorizedTasks.length,
+            completed: uncategorizedCompleted.length,
+            completionRate: Math.round(uncategorizedRate)
+        });
+    }
+    
+    return stats;
+}
+
+function updateCategoryStats(categoryStats) {
+    const container = document.getElementById('categoryStats');
+    container.innerHTML = '';
+    
+    if (categoryStats.length === 0) {
+        container.innerHTML = '<p class="text-muted">카테고리가 없습니다.</p>';
+        return;
+    }
+    
+    categoryStats.forEach(stat => {
+        const statElement = document.createElement('div');
+        statElement.className = 'mb-2';
+        statElement.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div style="width: 16px; height: 16px; background-color: ${stat.color}; border-radius: 2px; margin-right: 8px;"></div>
+                    <span class="fw-bold">${stat.name}</span>
+                </div>
+                <small class="text-muted">${stat.total}개</small>
+            </div>
+            <div class="progress mt-1" style="height: 6px;">
+                <div class="progress-bar" style="background-color: ${stat.color}; width: ${stat.completionRate}%;"></div>
+            </div>
+            <small class="text-muted">${stat.completionRate}% 완료 (${stat.completed}/${stat.total})</small>
+        `;
+        container.appendChild(statElement);
+    });
+}
+
+// 카테고리별 차트 업데이트
+function updateCategoryChart(categoryStats) {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    
+    if (categoryChart) {
+        categoryChart.destroy();
+    }
+    
+    if (categoryStats.length === 0) {
+        return;
+    }
+    
+    const labels = categoryStats.map(stat => stat.name);
+    const data = categoryStats.map(stat => stat.total);
+    const colors = categoryStats.map(stat => stat.color);
+    
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 10,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const stat = categoryStats[context.dataIndex];
+                            return `${context.label}: ${context.parsed}개 (${stat.completionRate}% 완료)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 일별 통계 로드
+async function loadDailyStats() {
+    try {
+        const days = document.getElementById('periodSelect').value;
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        
+        const response = await fetch(`/api/stats/daily?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`);
+        const stats = await response.json();
+        
+        updateDailyChart(stats);
+        
+    } catch (error) {
+        console.error('일별 통계 로드 실패:', error);
+    }
+}
+
+// 누적 통계 로드
+async function loadCumulativeStats() {
+    try {
+        const days = document.getElementById('cumulativePeriodSelect').value;
+        const response = await fetch(`/api/stats/cumulative?days=${days}`);
+        const stats = await response.json();
+        
+        updateCumulativeChart(stats.data);
+        
+    } catch (error) {
+        console.error('누적 통계 로드 실패:', error);
+    }
+}
+
+// 상태별 차트 업데이트
+function updateStatusChart(statusBreakdown) {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    
+    if (statusChart) {
+        statusChart.destroy();
+    }
+    
+    const labels = Object.keys(statusBreakdown);
+    const data = Object.values(statusBreakdown);
+    
+    statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// 일별 차트 업데이트
+function updateDailyChart(stats) {
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    
+    if (dailyChart) {
+        dailyChart.destroy();
+    }
+    
+    const labels = stats.map(stat => new Date(stat.date).toLocaleDateString());
+    const addedData = stats.map(stat => stat.tasks_added);
+    const completedData = stats.map(stat => stat.tasks_completed);
+    
+    dailyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '추가된 할일',
+                data: addedData,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }, {
+                label: '완료된 할일',
+                data: completedData,
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// 누적 차트 업데이트
+function updateCumulativeChart(data) {
+    const ctx = document.getElementById('cumulativeChart').getContext('2d');
+    
+    if (cumulativeChart) {
+        cumulativeChart.destroy();
+    }
+    
+    if (!data || data.length === 0) {
+        console.log('누적 차트 데이터가 없습니다.');
+        return;
+    }
+    
+    console.log('누적 차트 데이터:', data);
+    
+    const labels = data.map(item => new Date(item.date).toLocaleDateString('ko-KR'));
+    const cumulativeAdded = data.map(item => item.cumulative_added);
+    const cumulativeCompleted = data.map(item => item.cumulative_completed);
+    const completionRate = data.map(item => Math.round(item.completion_rate * 100) / 100);
+    
+    cumulativeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '누적 추가',
+                data: cumulativeAdded,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                fill: false,
+                yAxisID: 'y',
+                tension: 0.1
+            }, {
+                label: '누적 완료',
+                data: cumulativeCompleted,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                fill: false,
+                yAxisID: 'y',
+                tension: 0.1
+            }, {
+                label: '완료율 (%)',
+                data: completionRate,
+                borderColor: 'rgba(255, 206, 86, 1)',
+                backgroundColor: 'rgba(255, 206, 86, 0.1)',
+                fill: false,
+                yAxisID: 'y1',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            elements: {
+                point: {
+                    radius: 4,
+                    hoverRadius: 6
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: '태스크 수'
+                    },
+                    ticks: {
+                        maxTicksLimit: 10,
+                        stepSize: 10,
+                        callback: function(value, index, values) {
+                            return Math.round(value);
+                        }
+                    },
+                    grid: {
+                        display: true,
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: '완료율 (%)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                    ticks: {
+                        maxTicksLimit: 6,
+                        callback: function(value, index, values) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.dataset.yAxisID === 'y1') {
+                                label += context.parsed.y + '%';
+                            } else {
+                                label += context.parsed.y + '개';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 통계 업데이트 (매일 실행)
+async function updateDailyStats() {
+    try {
+        const response = await fetch('/api/stats/update-daily', {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            console.log('일별 통계 업데이트 완료');
+        }
+    } catch (error) {
+        console.error('일별 통계 업데이트 실패:', error);
+    }
+}
+
+// 최근 활동 로드
+async function loadRecentActivities() {
+    try {
+        const response = await fetch('/api/stats/recent-activities?limit=10');
+        const data = await response.json();
+        
+        updateRecentActivities(data.activities);
+        
+    } catch (error) {
+        console.error('최근 활동 로드 실패:', error);
+    }
+}
+
+// 최근 활동 표시
+function updateRecentActivities(activities) {
+    const container = document.getElementById('recentActivities');
+    container.innerHTML = '';
+    
+    if (!activities || activities.length === 0) {
+        container.innerHTML = '<p class="text-muted">최근 활동이 없습니다.</p>';
+        return;
+    }
+    
+    const activitiesList = document.createElement('div');
+    activitiesList.className = 'list-group list-group-flush';
+    
+    activities.forEach(activity => {
+        const activityItem = document.createElement('div');
+        activityItem.className = 'list-group-item px-0 border-0';
+        
+        const timeAgo = getRelativeTime(activity.timestamp);
+        
+        activityItem.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas ${activity.icon} ${activity.color}"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="fw-bold">${activity.task_title}</div>
+                    <small class="text-muted">${activity.action} · ${timeAgo}</small>
+                </div>
+            </div>
+        `;
+        
+        activitiesList.appendChild(activityItem);
+    });
+    
+    container.appendChild(activitiesList);
+}
+
+// 페이지 로드 시 통계 업데이트
+updateDailyStats();
+</script>
+{% endblock %}

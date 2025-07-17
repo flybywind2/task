@@ -1,0 +1,119 @@
+{
+  "timestamp": "2025-07-16 23:57:32",
+  "action": "TASK_CREATED",
+  "task": {
+    "id": 999,
+    "title": "테스트 태스크",
+    "status": "todo",
+    "category": "테스트 카테고리",
+    "priority": 1,
+    "is_pinned": false
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-16 23:57:32",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 999,
+    "title": "수정된 테스트 태스크",
+    "status": "todo",
+    "category": "테스트 카테고리",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "title": {
+      "from": "테스트 태스크",
+      "to": "수정된 테스트 태스크"
+    },
+    "priority": {
+      "from": 1,
+      "to": 2
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-16 23:57:32",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 999,
+    "title": "테스트 태스크",
+    "status": "in-progress",
+    "category": "테스트 카테고리",
+    "priority": 1,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "todo",
+      "to": "in-progress"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-16 23:57:32",
+  "action": "TASK_COMPLETED",
+  "task": {
+    "id": 999,
+    "title": "테스트 태스크",
+    "status": "done",
+    "category": "테스트 카테고리",
+    "priority": 1,
+    "is_pinned": false
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-16 23:57:32",
+  "action": "TASK_PINNED",
+  "task": {
+    "id": 999,
+    "title": "테스트 태스크",
+    "status": "in-progress",
+    "category": "테스트 카테고리",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {
+    "is_pinned": {
+      "from": false,
+      "to": true
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-16 23:57:32",
+  "action": "TASK_DELETED",
+  "task": {
+    "id": 999,
+    "title": "테스트 태스크",
+    "status": "in-progress",
+    "category": "테스트 카테고리",
+    "priority": 1,
+    "is_pinned": true
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-16 23:59:08",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 1,
+    "title": "테스트하기",
+    "status": "Todo",
+    "category": null,
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "Backlog",
+      "to": "Todo"
+    }
+  }
+}
+--------------------------------------------------
