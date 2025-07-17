@@ -1,102 +1,254 @@
-# Todo 관리 애플리케이션
+# Todo2 관리 애플리케이션
 
-FastAPI를 기반으로 구축된 간단한 Todo 관리 애플리케이션입니다. 프론트엔드는 HTML, CSS, JavaScript를 사용합니다.
+FastAPI와 현대적인 웹 기술을 기반으로 구축된 종합적인 Todo 관리 애플리케이션입니다. 직관적인 칸반보드와 리스트뷰를 제공하며, 풍부한 통계 및 데이터 관리 기능을 갖추고 있습니다.
 
-## 주요 기능
+## ✨ 주요 기능
 
-- **작업 관리:** 작업 생성, 조회, 수정, 삭제 기능
-- **상태 관리:** 작업에 "대기", "진행 중", "완료" 등 다양한 상태를 지정할 수 있습니다.
-- **카테고리 관리:** 작업을 여러 카테고리로 분류할 수 있습니다.
-- **작업 고정:** 중요한 작업을 목록 상단에 고정할 수 있습니다.
-- **일일 통계:** 일별로 추가된 작업, 완료된 작업, 미완료된 작업 등의 통계를 추적합니다.
-- **일일 로그:** 특정 날짜의 모든 작업 관련 활동을 기록합니다.
-- **설정:** 애플리케이션 설정을 구성할 수 있습니다.
+### 📋 **할일 관리**
+- **CRUD 작업**: 할일 생성, 조회, 수정, 삭제
+- **상태 관리**: 커스터마이징 가능한 상태 시스템 (Backlog → Todo → In Progress → Done)
+- **우선순위 설정**: 4단계 우선순위 (낮음, 보통, 높음, 긴급)
+- **핀고정**: 중요한 할일을 목록 상단에 고정
+- **Rich Text 편집**: Quill 에디터를 통한 풍부한 텍스트 편집
 
-## 프로젝트 구조
+### 🎨 **시각화 및 뷰**
+- **칸반보드**: 드래그 앤 드롭으로 상태 변경 가능한 직관적인 보드
+- **리스트뷰**: 테이블 형태의 상세한 할일 관리
+- **레이블 그룹핑**: 레이블별로 할일을 그룹화하여 표시
+- **반응형 디자인**: 모든 디바이스에서 완벽한 사용자 경험
+
+### 🏷️ **분류 및 태깅**
+- **카테고리**: 색상별 카테고리로 할일 분류
+- **레이블**: 다중 레이블을 통한 유연한 태깅 시스템
+- **스마트 필터링**: 상태, 카테고리, 우선순위별 필터링
+
+### 📊 **대시보드 및 통계**
+- **전체 완료율**: 실시간 진행률 추적
+- **상태별 현황**: 원형 차트로 상태별 할일 분포 시각화
+- **카테고리별 통계**: 카테고리별 완료율 및 현황
+- **레이블별 진행률**: 레이블별 완료 상태 추적
+- **일별/누적 통계**: 시간별 생산성 분석
+- **최근 활동**: 최근 할일 생성 및 완료 이력
+
+### 📤 **데이터 관리**
+- **CSV 내보내기**: 필터링된 데이터를 CSV로 내보내기
+- **CSV 가져오기**: 기존 데이터를 CSV로 일괄 가져오기
+- **템플릿 제공**: CSV 형식 가이드 및 예시 파일
+- **데이터 백업**: 자동 백업 및 복원 기능
+
+### ⚙️ **고급 기능**
+- **일괄 작업**: 여러 할일을 한번에 수정/삭제
+- **키보드 단축키**: 빠른 작업을 위한 단축키 지원
+- **실시간 알림**: 작업 상태 변경 시 즉시 알림
+- **로컬 스토리지**: 사용자 설정 및 뷰 상태 저장
+
+## 🏗️ 프로젝트 구조
 
 ```
-/
-├── app/
+todo2/
+├── app/                          # FastAPI 백엔드 애플리케이션
 │   ├── __init__.py
-│   ├── database.py
-│   ├── main.py
-│   ├── models.py
-│   ├── schemas.py
-│   ├── routers/
+│   ├── main.py                   # 메인 애플리케이션 파일
+│   ├── database.py               # 데이터베이스 연결 설정
+│   ├── models.py                 # SQLAlchemy ORM 모델
+│   ├── schemas.py                # Pydantic 스키마 정의
+│   ├── routers/                  # API 라우터 모듈
 │   │   ├── __init__.py
-│   │   ├── categories.py
-│   │   ├── settings.py
-│   │   ├── stats.py
-│   │   ├── statuses.py
-│   │   └── tasks.py
+│   │   ├── tasks.py              # 할일 관리 API
+│   │   ├── statuses.py           # 상태 관리 API
+│   │   ├── categories.py         # 카테고리 관리 API
+│   │   ├── settings.py           # 설정 관리 API
+│   │   ├── stats.py              # 통계 및 대시보드 API
+│   │   └── csv_export.py         # CSV 내보내기/가져오기 API
 │   └── utils/
-│       └── logger.py
-├── static/
+│       └── logger.py             # 로깅 유틸리티
+├── static/                       # 정적 파일 (CSS, JS)
 │   ├── css/
-│   │   └── style.css
+│   │   └── style.css            # 메인 스타일시트
 │   └── js/
-│       └── app.js
-├── templates/
-│   ├── base.html
-│   ├── dashboard.html
-│   └── index.html
-├── .gitignore
-├── install_service.py
-├── PRD.md
-├── requirements.txt
-├── start_todo_app.bat
-├── start_with_browser.bat
-└── todo.db
+│       └── app.js               # 프론트엔드 JavaScript
+├── templates/                    # Jinja2 HTML 템플릿
+│   ├── base.html                # 기본 레이아웃
+│   ├── index.html               # 메인 페이지 (칸반보드/리스트뷰)
+│   └── dashboard.html           # 대시보드 페이지
+├── logs/                        # 애플리케이션 로그
+├── venv/                        # Python 가상환경
+├── main.py                      # 독립 실행형 메인 파일
+├── reset_database.py            # 데이터베이스 초기화 스크립트
+├── requirements.txt             # Python 의존성
+├── todo2.spec                   # PyInstaller 설정
+├── build_exe.bat               # Windows EXE 빌드 스크립트
+├── quick_build.bat             # 빠른 EXE 빌드 스크립트
+├── start_with_browser.bat      # 브라우저 자동 실행 스크립트
+├── README.md                   # 프로젝트 문서
+├── README_EXE.md              # EXE 빌드 가이드
+└── todo.db                     # SQLite 데이터베이스
 ```
 
-### `app` 디렉토리
+## 🚀 설치 및 실행
 
-- `main.py`: FastAPI 애플리케이션의 메인 파일입니다. 앱을 초기화하고, 정적 파일을 마운트하며, 템플릿을 설정하고, API 라우터를 포함합니다.
-- `database.py`: SQLAlchemy를 사용한 데이터베이스 연결 설정을 포함합니다.
-- `models.py`: 데이터베이스 테이블(Status, Category, Task, DailyStat, UserSetting, DailyLog)에 대한 SQLAlchemy ORM 모델을 정의합니다.
-- `schemas.py`: 데이터 유효성 검사 및 직렬화를 위한 Pydantic 모델을 정의합니다.
-- `routers/`: 다양한 리소스(작업, 상태, 카테고리, 설정, 통계)에 대한 API 라우터를 포함합니다.
-- `utils/`: 로거와 같은 유틸리티 모듈을 포함합니다.
+### **요구사항**
+- Python 3.8+
+- 웹 브라우저 (Chrome, Firefox, Edge 등)
 
-### `static` 디렉토리
+### **방법 1: 간편 실행 (권장)**
 
-- CSS 및 JavaScript와 같은 프론트엔드용 정적 파일을 포함합니다.
+#### Windows 사용자
+1. **프로젝트 다운로드** 또는 클론
+2. **`start_with_browser.bat` 실행** (더블클릭)
+   - 자동으로 가상환경 활성화
+   - 의존성 설치
+   - 서버 시작
+   - 브라우저 자동 실행
 
-### `templates` 디렉토리
+#### 수동 설정
+```bash
+# 1. 가상환경 생성 및 활성화
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# 또는
+venv\Scripts\activate     # Windows
 
-- HTML 페이지를 위한 Jinja2 템플릿을 포함합니다.
+# 2. 의존성 설치
+pip install -r requirements.txt
 
-## 실행 방법
+# 3. 애플리케이션 실행
+python main.py
+# 또는
+python -m app.main
+# 또는
+uvicorn app.main:app --host 0.0.0.0 --port 8501 --reload
+```
 
-1.  **의존성 설치:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+### **방법 2: EXE 파일 생성**
 
-2.  **애플리케이션 실행:**
-    - Windows에서는 `start_todo_app.bat` 파일을 실행할 수 있습니다.
-    - 또는 터미널에서 다음 명령을 실행할 수 있습니다.
-      ```bash
-      uvicorn app.main:app --reload --port 8501
-      ```
-    - 다른 명령어
-      ```bash
-      python -m app.main
-      ```
+독립 실행 가능한 EXE 파일을 만들 수 있습니다:
 
-3.  **애플리케이션 접속:**
-    - 웹 브라우저를 열고 `http://localhost:8501`로 이동합니다.
+```bash
+# 빠른 빌드 (권장)
+quick_build.bat
 
-## API 엔드포인트
+# 또는 수동 빌드
+build_exe.bat
+```
 
-API 엔드포인트는 `app/routers/` 디렉토리에 정의되어 있습니다. 주요 엔드포인트는 다음과 같습니다.
+자세한 내용은 [README_EXE.md](README_EXE.md)를 참조하세요.
 
-- `GET /api/tasks`: 작업 목록을 가져옵니다.
-- `POST /api/tasks`: 새 작업을 생성합니다.
-- `GET /api/tasks/{task_id}`: 특정 작업을 가져옵니다.
-- `PUT /api/tasks/{task_id}`: 작업을 수정합니다.
-- `DELETE /api/tasks/{task_id}`: 작업을 삭제합니다.
-- `PUT /api/tasks/{task_id}/status`: 작업의 상태를 업데이트합니다.
-- `PUT /api/tasks/{task_id}/pin`: 작업을 고정하거나 고정 해제합니다.
+### **접속**
+- 브라우저에서 `http://localhost:8501` 또는 `http://127.0.0.1:8501` 접속
+- 서버가 자동으로 사용 가능한 포트를 찾아 실행됩니다
 
-전체 API 엔드포인트 목록은 `app/routers/` 디렉토리의 코드를 참조하십시오.
+## 🎯 사용 방법
+
+### **기본 설정**
+1. **첫 실행 시**: 기본 상태들이 자동 생성됩니다
+   - Backlog (진행 전)
+   - Todo (진행 전)
+   - In Progress (진행 중)
+   - Done (완료)
+
+2. **할일 추가**: 
+   - 상단의 빠른 추가 입력창 사용
+   - "상세" 버튼으로 Rich Text 편집
+
+3. **뷰 전환**:
+   - **칸반보드**: 드래그 앤 드롭으로 직관적 관리
+   - **리스트뷰**: 테이블 형태로 상세 관리
+
+### **고급 기능**
+- **레이블 그룹핑**: 칸반보드에서 레이블별 그룹화
+- **CSV 관리**: 데이터 내보내기/가져오기
+- **대시보드**: 통계 및 진행률 확인
+- **상태/카테고리 관리**: 커스터마이징 가능한 워크플로우
+
+## 🔧 데이터베이스 관리
+
+### **초기화**
+```bash
+python reset_database.py
+```
+
+### **백업**
+```bash
+# 수동 백업
+cp todo.db todo_backup_$(date +%Y%m%d).db
+```
+
+## 🔌 API 엔드포인트
+
+### **할일 관리** (`/api/tasks`)
+- `GET /api/tasks` - 할일 목록 조회 (필터링, 정렬 지원)
+- `POST /api/tasks` - 새 할일 생성
+- `GET /api/tasks/{task_id}` - 특정 할일 조회
+- `PUT /api/tasks/{task_id}` - 할일 수정
+- `DELETE /api/tasks/{task_id}` - 할일 삭제
+- `PUT /api/tasks/{task_id}/status` - 상태 변경
+- `PUT /api/tasks/{task_id}/pin` - 핀고정 토글
+
+### **상태 관리** (`/api/statuses`)
+- `GET /api/statuses` - 상태 목록 조회
+- `POST /api/statuses` - 새 상태 생성
+- `PUT /api/statuses/{status_id}` - 상태 수정
+- `DELETE /api/statuses/{status_id}` - 상태 삭제
+
+### **카테고리 관리** (`/api/categories`)
+- `GET /api/categories` - 카테고리 목록 조회
+- `POST /api/categories` - 새 카테고리 생성
+- `PUT /api/categories/{category_id}` - 카테고리 수정
+- `DELETE /api/categories/{category_id}` - 카테고리 삭제
+
+### **통계 및 대시보드** (`/api/stats`)
+- `GET /api/stats/summary` - 전체 요약 통계
+- `GET /api/stats/daily` - 일별 통계
+- `GET /api/stats/cumulative` - 누적 통계
+- `GET /api/stats/labels` - 레이블별 통계
+- `GET /api/stats/recent-activities` - 최근 활동
+
+### **CSV 관리** (`/api/csv`)
+- `GET /api/csv/export` - CSV 내보내기
+- `POST /api/csv/import` - CSV 가져오기
+- `GET /api/csv/template` - CSV 템플릿 다운로드
+
+### **설정** (`/api/settings`)
+- `GET /api/settings` - 설정 조회
+- `PUT /api/settings/{key}` - 설정 업데이트
+
+## 🛠️ 기술 스택
+
+### **백엔드**
+- **FastAPI** - 고성능 웹 프레임워크
+- **SQLAlchemy** - ORM 및 데이터베이스 관리
+- **SQLite** - 경량 데이터베이스
+- **Pydantic** - 데이터 검증 및 설정
+
+### **프론트엔드**
+- **HTML5/CSS3** - 마크업 및 스타일링
+- **JavaScript (ES6+)** - 클라이언트 사이드 로직
+- **Bootstrap 5** - UI 프레임워크
+- **Chart.js** - 데이터 시각화
+- **Quill.js** - Rich Text 에디터
+- **SortableJS** - 드래그 앤 드롭
+
+### **배포 및 빌드**
+- **PyInstaller** - EXE 파일 생성
+- **Uvicorn** - ASGI 서버
+
+## 📝 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다.
+
+## 🤝 기여하기
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📧 문의
+
+프로젝트에 대한 문의사항이나 버그 리포트는 GitHub Issues를 통해 제출해주세요.
+
+---
+
+**Todo2** - 효율적이고 직관적인 할일 관리의 새로운 표준 ✨

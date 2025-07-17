@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from app.routers import tasks, statuses, settings, stats, categories
+from app.routers import tasks, statuses, settings, stats, categories, csv_export
 from app.database import engine, Base
 import uvicorn
 
@@ -22,6 +22,7 @@ app.include_router(statuses.router, prefix="/api", tags=["statuses"])
 app.include_router(categories.router, prefix="/api", tags=["categories"])
 app.include_router(settings.router, prefix="/api", tags=["settings"])
 app.include_router(stats.router, prefix="/api", tags=["stats"])
+app.include_router(csv_export.router, prefix="/api", tags=["csv"])
 
 @app.get("/")
 async def root(request: Request):
