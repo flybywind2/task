@@ -60,6 +60,21 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
+                <h5 class="mb-0">레이블별 진행률</h5>
+            </div>
+            <div class="card-body">
+                <div id="labelStats">
+                    <!-- 레이블별 통계가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
                 <h5 class="mb-0">카테고리별 현황</h5>
             </div>
             <div class="card-body">
@@ -152,6 +167,7 @@ let statusChart, dailyChart, cumulativeChart, categoryChart;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadSummaryStats();
+    loadLabelStats();
     loadCategoryStats();
     loadDailyStats();
     loadCumulativeStats();
@@ -191,6 +207,65 @@ async function loadSummaryStats() {
     } catch (error) {
         console.error('요약 통계 로드 실패:', error);
     }
+}
+
+// 레이블별 통계 로드
+async function loadLabelStats() {
+    try {
+        const response = await fetch('/api/stats/labels');
+        const data = await response.json();
+        
+        updateLabelStats(data.labels);
+        
+    } catch (error) {
+        console.error('레이블 통계 로드 실패:', error);
+    }
+}
+
+function updateLabelStats(labelStats) {
+    const container = document.getElementById('labelStats');
+    container.innerHTML = '';
+    
+    if (labelStats.length === 0) {
+        container.innerHTML = '<p class="text-muted">레이블이 없습니다.</p>';
+        return;
+    }
+    
+    // 상위 10개만 표시
+    const topLabels = labelStats.slice(0, 10);
+    
+    topLabels.forEach(stat => {
+        const statElement = document.createElement('div');
+        statElement.className = 'mb-2';
+        
+        // 완료율에 따른 색상 설정
+        let progressColor = 'bg-danger';
+        if (stat.completion_rate >= 80) {
+            progressColor = 'bg-success';
+        } else if (stat.completion_rate >= 60) {
+            progressColor = 'bg-warning';
+        } else if (stat.completion_rate >= 40) {
+            progressColor = 'bg-info';
+        }
+        
+        statElement.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-primary me-2" style="font-size: 0.7rem;">
+                        <i class="fas fa-tag"></i> ${stat.name}
+                    </span>
+                </div>
+                <small class="text-muted">${stat.total}개</small>
+            </div>
+            <div class="progress mt-1" style="height: 8px;">
+                <div class="progress-bar ${progressColor}" role="progressbar" 
+                     style="width: ${stat.completion_rate}%;" 
+                     title="${stat.completion_rate}% 완료"></div>
+            </div>
+            <small class="text-muted">${stat.completion_rate}% 완료 (${stat.completed}/${stat.total})</small>
+        `;
+        container.appendChild(statElement);
+    });
 }
 
 // 카테고리 통계 로드

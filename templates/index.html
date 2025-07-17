@@ -27,7 +27,7 @@
                         <i class="fas fa-list"></i> 리스트
                     </button>
                 </div>
-                <div class="btn-group ms-2" role="group" aria-label="Group toggle" id="groupToggleContainer" style="display: none;">
+                <div class="btn-group ms-2" role="group" aria-label="Group toggle" id="groupToggleContainer">
                     <button type="button" class="btn btn-outline-info" id="groupToggleBtn" onclick="toggleGrouping()">
                         <i class="fas fa-layer-group"></i> 레이블 그룹핑
                     </button>
@@ -673,13 +673,13 @@ function groupTasksByLabels(tasks) {
     
     tasks.forEach(task => {
         if (task.labels && task.labels.trim()) {
-            const labels = task.labels.split(',').map(label => label.trim());
-            const primaryLabel = labels[0]; // 첫 번째 레이블을 기준으로 그룹핑
+            const labels = task.labels.split(',').map(label => label.trim()).sort(); // 정렬하여 순서 일관성 보장
+            const labelKey = labels.join(','); // 전체 레이블 조합을 키로 사용
             
-            if (!groups[primaryLabel]) {
-                groups[primaryLabel] = [];
+            if (!groups[labelKey]) {
+                groups[labelKey] = [];
             }
-            groups[primaryLabel].push(task);
+            groups[labelKey].push(task);
         } else {
             ungrouped.push(task);
         }
@@ -693,14 +693,18 @@ function renderGroupedTasks(groupedTasks) {
     let html = '';
     
     // 레이블 그룹들 렌더링
-    Object.keys(groupedTasks.groups).forEach(label => {
-        const tasks = groupedTasks.groups[label];
+    Object.keys(groupedTasks.groups).forEach(labelKey => {
+        const tasks = groupedTasks.groups[labelKey];
+        const labels = labelKey.split(','); // 콤마로 분리하여 개별 레이블들 표시
+        
         html += `
             <div class="label-group mb-3">
                 <div class="label-group-header">
-                    <span class="badge bg-primary label-badge">
-                        <i class="fas fa-tag"></i> ${label}
-                    </span>
+                    ${labels.map(label => `
+                        <span class="badge bg-primary label-badge me-1">
+                            <i class="fas fa-tag"></i> ${label}
+                        </span>
+                    `).join('')}
                     <span class="badge bg-secondary ms-1">${tasks.length}개</span>
                 </div>
                 <div class="task-group">

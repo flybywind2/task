@@ -1,0 +1,203 @@
+{
+  "timestamp": "2025-07-18 06:43:01",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 9,
+    "title": "ㄷ",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:43:04",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 5,
+    "title": "b",
+    "status": "ToDo",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "Done",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:43:07",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 6,
+    "title": "c",
+    "status": "ToDo",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "Backlog",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:43:14",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 6,
+    "title": "c",
+    "status": "ToDo",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:43:15",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 6,
+    "title": "c",
+    "status": "Backlog",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "ToDo",
+      "to": "Backlog"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:43:18",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 5,
+    "title": "b",
+    "status": "In Progress",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "ToDo",
+      "to": "In Progress"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:48:37",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 5,
+    "title": "b",
+    "status": "ToDo",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "In Progress",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:49:14",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 6,
+    "title": "c",
+    "status": "ToDo",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "Backlog",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:49:16",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 2,
+    "title": "2",
+    "status": "Backlog",
+    "category": "숫자",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "Done",
+      "to": "Backlog"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:54:15",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 2,
+    "title": "2",
+    "status": "Backlog",
+    "category": "숫자",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:54:21",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 8,
+    "title": "ㄴ",
+    "status": "Backlog",
+    "category": "한글",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 06:54:45",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 6,
+    "title": "c",
+    "status": "ToDo",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {}
+}
+--------------------------------------------------

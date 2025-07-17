@@ -1,7 +1,7 @@
 @echo off
 echo Todo App을 시작합니다...
 
-cd /d "D:\Python\todo2"
+cd /d "%~dp0"
 call venv\Scripts\activate
 
 echo 서버를 시작합니다...

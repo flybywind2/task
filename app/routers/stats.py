@@ -200,3 +200,53 @@ async def get_recent_activities(
     activities = activities[:limit]
     
     return {"activities": activities}
+
+@router.get("/stats/labels")
+async def get_label_stats(db: Session = Depends(get_db)):
+    """레이블별 통계 조회"""
+    
+    # 모든 태스크에서 레이블 추출
+    tasks = db.query(Task).all()
+    label_stats = {}
+    
+    for task in tasks:
+        if task.labels:
+            labels = [label.strip() for label in task.labels.split(',')]
+            for label in labels:
+                if label:
+                    if label not in label_stats:
+                        label_stats[label] = {
+                            'total': 0,
+                            'completed': 0,
+                            'completion_rate': 0
+                        }
+                    
+                    label_stats[label]['total'] += 1
+                    
+                    # 완료 상태 확인
+                    if task.status and task.status.is_done:
+                        label_stats[label]['completed'] += 1
+    
+    # 완료율 계산
+    for label, stats in label_stats.items():
+        if stats['total'] > 0:
+            stats['completion_rate'] = round((stats['completed'] / stats['total']) * 100, 1)
+    
+    # 레이블별 통계를 완료율 순으로 정렬
+    sorted_labels = sorted(
+        label_stats.items(), 
+        key=lambda x: x[1]['completion_rate'], 
+        reverse=True
+    )
+    
+    return {
+        "labels": [
+            {
+                "name": label,
+                "total": stats['total'],
+                "completed": stats['completed'],
+                "completion_rate": stats['completion_rate']
+            }
+            for label, stats in sorted_labels
+        ]
+    }
