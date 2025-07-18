@@ -1,5 +1,5 @@
 @echo off
-cd /d "D:\Python\todo2"
+cd /d "%~dp0"
 call venv\Scripts\activate
 python -m app.main
 pause

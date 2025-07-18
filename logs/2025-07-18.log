@@ -201,3 +201,437 @@
   "changes": {}
 }
 --------------------------------------------------
+{
+  "timestamp": "2025-07-18 20:58:48",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "ToDo",
+    "category": null,
+    "priority": 2,
+    "is_pinned": true
+  },
+  "changes": {
+    "status": {
+      "from": "In Progress",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 20:58:50",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 10,
+    "title": "할일 예시 1",
+    "status": "ToDo",
+    "category": null,
+    "priority": 3,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "In Progress",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 20:58:50",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 4,
+    "title": "a",
+    "status": "ToDo",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "In Progress",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 20:58:57",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 4,
+    "title": "a",
+    "status": "In Progress",
+    "category": "영어",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "ToDo",
+      "to": "In Progress"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:29:02",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 2,
+    "title": "2",
+    "status": "ToDo",
+    "category": "숫자",
+    "priority": 2,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "Backlog",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:32:46",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "In Progress",
+    "category": null,
+    "priority": 2,
+    "is_pinned": true
+  },
+  "changes": {
+    "status": {
+      "from": "ToDo",
+      "to": "In Progress"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:36:01",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "In Progress",
+    "category": "숫자",
+    "priority": 2,
+    "is_pinned": true
+  },
+  "changes": {
+    "title": {
+      "from": null,
+      "to": "할일 예시 2"
+    },
+    "priority": {
+      "from": null,
+      "to": 2
+    },
+    "status": {
+      "from": null,
+      "to": "In Progress"
+    },
+    "category": {
+      "from": null,
+      "to": "숫자"
+    },
+    "is_pinned": {
+      "from": null,
+      "to": true
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:36:10",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 10,
+    "title": "할일 예시 1",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 3,
+    "is_pinned": false
+  },
+  "changes": {
+    "title": {
+      "from": null,
+      "to": "할일 예시 1"
+    },
+    "priority": {
+      "from": null,
+      "to": 3
+    },
+    "status": {
+      "from": null,
+      "to": "ToDo"
+    },
+    "category": {
+      "from": null,
+      "to": "한글"
+    },
+    "is_pinned": {
+      "from": null,
+      "to": false
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:38:09",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "In Progress",
+    "category": "한글",
+    "priority": 2,
+    "is_pinned": true
+  },
+  "changes": {
+    "title": {
+      "from": null,
+      "to": "할일 예시 2"
+    },
+    "priority": {
+      "from": null,
+      "to": 2
+    },
+    "status": {
+      "from": null,
+      "to": "In Progress"
+    },
+    "category": {
+      "from": "숫자",
+      "to": "한글"
+    },
+    "is_pinned": {
+      "from": null,
+      "to": true
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:38:12",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "In Progress",
+    "category": "한글",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {
+    "title": {
+      "from": null,
+      "to": "할일 예시 2"
+    },
+    "priority": {
+      "from": 2,
+      "to": 1
+    },
+    "status": {
+      "from": null,
+      "to": "In Progress"
+    },
+    "category": {
+      "from": null,
+      "to": "한글"
+    },
+    "is_pinned": {
+      "from": null,
+      "to": true
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:38:17",
+  "action": "TASK_STATUS_CHANGED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {
+    "status": {
+      "from": "In Progress",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:49:18",
+  "action": "TASK_CREATED",
+  "task": {
+    "id": 12,
+    "title": "123",
+    "status": "Backlog",
+    "category": null,
+    "priority": 2,
+    "is_pinned": false
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:49:21",
+  "action": "TASK_DELETED",
+  "task": {
+    "id": 12,
+    "title": "123",
+    "status": "Backlog",
+    "category": null,
+    "priority": 2,
+    "is_pinned": false
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:49:29",
+  "action": "TASK_CREATED",
+  "task": {
+    "id": 12,
+    "title": "123",
+    "status": "Backlog",
+    "category": "숫자",
+    "priority": 1,
+    "is_pinned": false
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:49:37",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 12,
+    "title": "123",
+    "status": "ToDo",
+    "category": "숫자",
+    "priority": 1,
+    "is_pinned": false
+  },
+  "changes": {
+    "status": {
+      "from": "Backlog",
+      "to": "ToDo"
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:49:50",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 12,
+    "title": "123",
+    "status": "ToDo",
+    "category": "숫자",
+    "priority": 4,
+    "is_pinned": false
+  },
+  "changes": {
+    "priority": {
+      "from": 1,
+      "to": 4
+    }
+  }
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:55:23",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:55:28",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:56:42",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:56:50",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:57:26",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {}
+}
+--------------------------------------------------
+{
+  "timestamp": "2025-07-18 21:57:28",
+  "action": "TASK_UPDATED",
+  "task": {
+    "id": 11,
+    "title": "할일 예시 2",
+    "status": "ToDo",
+    "category": "한글",
+    "priority": 1,
+    "is_pinned": true
+  },
+  "changes": {}
+}
+--------------------------------------------------

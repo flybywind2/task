@@ -1,0 +1,10 @@
+=== Todo2 서버 시작 로그 ===
+시간: 2025-07-18 22:23:40
+호스트: 127.0.0.1
+포트: 8501
+실행 환경: PyInstaller
+로그 파일 위치: D:\Python\todo2\dist\todo2_server.log
+Python 버전: 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]
+
+uvicorn 서버 시작 시도...
+서버 시작 성공!

@@ -27,6 +27,9 @@
                         <i class="fas fa-list"></i> 리스트
                     </button>
                 </div>
+                <button type="button" class="btn btn-outline-secondary ms-2" id="miniCardToggle" onclick="toggleMiniCardMode()" title="미니 카드 모드">
+                    <i class="fas fa-compress-alt"></i> 미니
+                </button>
                 <div class="btn-group ms-2" role="group" aria-label="Group toggle" id="groupToggleContainer">
                     <button type="button" class="btn btn-outline-info" id="groupToggleBtn" onclick="toggleGrouping()">
                         <i class="fas fa-layer-group"></i> 레이블 그룹핑
@@ -216,6 +219,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
                 <button type="button" class="btn btn-primary" onclick="saveTask()">저장</button>
+                <small class="text-muted ms-2">(Ctrl+Enter)</small>
             </div>
         </div>
     </div>
@@ -506,6 +510,7 @@ let currentView = 'kanban'; // 'kanban' 또는 'list'
 let selectedTasks = new Set(); // 선택된 태스크 ID 저장
 let quillEditor = null;
 let isGroupingEnabled = false; // 레이블 그룹핑 활성화 상태
+let isMiniCardMode = false; // 미니 카드 모드 활성화 상태
 
 // Quill 에디터 초기화
 function initQuillEditor() {
@@ -593,6 +598,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Quill 에디터 초기화
     initQuillEditor();
     
+    // 전역 함수 할당 (onclick 이벤트용)
+    window.toggleMiniCardMode = toggleMiniCardMode;
+    console.log('toggleMiniCardMode 함수가 전역으로 할당됨:', typeof window.toggleMiniCardMode);
+    
     // 기본 상태 생성 (처음 실행 시)
     createDefaultStatuses().then(() => {
         loadStatuses();
@@ -629,6 +638,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         const savedView = localStorage.getItem('currentView') || 'kanban';
         const savedGrouping = localStorage.getItem('isGroupingEnabled') === 'true';
+        const savedMiniMode = localStorage.getItem('isMiniCardMode') === 'true';
         
         // 그룹핑 상태 복원
         isGroupingEnabled = savedGrouping;
@@ -636,6 +646,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (groupToggleBtn && isGroupingEnabled) {
             groupToggleBtn.classList.add('active');
             groupToggleBtn.innerHTML = '<i class="fas fa-layer-group"></i> 그룹핑 해제';
+        }
+        
+        // 미니 카드 모드 상태 복원
+        isMiniCardMode = savedMiniMode;
+        const miniToggleBtn = document.getElementById('miniCardToggle');
+        const kanbanBoard = document.getElementById('kanban-board');
+        if (miniToggleBtn && isMiniCardMode) {
+            miniToggleBtn.classList.add('active');
+            miniToggleBtn.classList.remove('btn-outline-secondary');
+            miniToggleBtn.classList.add('btn-secondary');
+            miniToggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i> 일반';
         }
         
         if (savedView === 'list') {
@@ -1002,6 +1023,40 @@ function createGroupedTaskCard(task, index) {
     const transform = index > 0 ? `translateY(-${index * 15}px)` : '';
     const marginBottom = index === 0 ? `${(index + 1) * 15}px` : '0px';
     
+    // 미니 카드 모드일 때 간단한 구조 반환
+    if (isMiniCardMode) {
+        return `
+            <div class="task-card card mb-1 ${task.is_pinned ? 'pinned' : ''}" 
+                 data-task-id="${task.id}" 
+                 style="${borderStyle} position: relative; z-index: ${zIndex}; transform: ${transform}; margin-bottom: ${marginBottom};"
+                 ondblclick="editTask(${task.id})"
+                 title="${task.title} - 더블클릭하여 편집">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="card-title mb-1 text-truncate" style="font-size: 0.875rem;">${task.title}</h6>
+                        <button class="btn btn-sm ${task.is_pinned ? 'btn-warning' : 'btn-outline-secondary'}" 
+                                onclick="togglePin(${task.id})" title="${task.is_pinned ? '핀고정 해제' : '핀고정'}">
+                            <i class="fas fa-thumbtack"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-${priorityColors[task.priority]}" style="font-size: 0.7rem;">${priorityLabels[task.priority]}</span>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary btn-sm" onclick="editTask(${task.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteTask(${task.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // 일반 모드일 때 전체 구조 반환
     return `
         <div class="task-card card mb-1 ${task.is_pinned ? 'pinned' : ''}" 
              data-task-id="${task.id}" 
@@ -1053,6 +1108,44 @@ function toggleGrouping() {
     localStorage.setItem('isGroupingEnabled', isGroupingEnabled);
 }
 
+// 미니 카드 모드 토글
+function toggleMiniCardMode() {
+    console.log('toggleMiniCardMode 함수 호출됨');
+    console.log('현재 isMiniCardMode:', isMiniCardMode);
+    
+    isMiniCardMode = !isMiniCardMode;
+    
+    const toggleBtn = document.getElementById('miniCardToggle');
+    const kanbanBoard = document.getElementById('kanban-board');
+    
+    console.log('toggleBtn:', toggleBtn);
+    console.log('kanbanBoard:', kanbanBoard);
+    console.log('새로운 isMiniCardMode:', isMiniCardMode);
+    
+    if (isMiniCardMode) {
+        toggleBtn.classList.add('active');
+        toggleBtn.classList.remove('btn-outline-secondary');
+        toggleBtn.classList.add('btn-secondary');
+        toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i> 일반';
+    } else {
+        toggleBtn.classList.remove('active');
+        toggleBtn.classList.remove('btn-secondary');
+        toggleBtn.classList.add('btn-outline-secondary');
+        toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i> 미니';
+    }
+    
+    // 칸반보드 다시 렌더링
+    renderKanbanBoard();
+    
+    // 상태 저장
+    localStorage.setItem('isMiniCardMode', isMiniCardMode);
+    
+    console.log('미니 카드 모드 토글 완료');
+}
+
+// 전역 범위에 함수 할당 (디버깅용)
+window.toggleMiniCardMode = toggleMiniCardMode;
+
 // 할일 카드 생성
 function createTaskCard(task) {
     const priorityColors = {
@@ -1086,6 +1179,40 @@ function createTaskCard(task) {
     const categoryColor = task.category ? task.category.color : '#dee2e6';
     const borderStyle = task.category ? `border-left: 4px solid ${categoryColor};` : '';
     
+    // 미니 카드 모드일 때 간단한 구조 반환 (그룹핑된 카드와 동일한 형태)
+    if (isMiniCardMode) {
+        return `
+            <div class="task-card card mb-1 ${task.is_pinned ? 'pinned' : ''}" 
+                 data-task-id="${task.id}" 
+                 style="${borderStyle}"
+                 ondblclick="editTask(${task.id})"
+                 title="${task.title} - 더블클릭하여 편집">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="card-title mb-1 text-truncate" style="font-size: 0.875rem;">${task.title}</h6>
+                        <button class="btn btn-sm ${task.is_pinned ? 'btn-warning' : 'btn-outline-secondary'}" 
+                                onclick="togglePin(${task.id})" title="${task.is_pinned ? '핀고정 해제' : '핀고정'}">
+                            <i class="fas fa-thumbtack"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-${priorityColors[task.priority]}" style="font-size: 0.7rem;">${priorityLabels[task.priority]}</span>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary btn-sm" onclick="editTask(${task.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteTask(${task.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // 일반 모드일 때 전체 구조 반환
     return `
         <div class="task-card card mb-2 ${task.is_pinned ? 'pinned' : ''} ${isStale ? 'stale-card' : ''}" 
              data-task-id="${task.id}" 
@@ -1093,19 +1220,20 @@ function createTaskCard(task) {
              style="${borderStyle}"
              ondblclick="editTask(${task.id})"
              title="더블클릭하여 편집">
+            ${task.is_pinned ? '<i class="fas fa-thumbtack pin-icon text-warning"></i>' : ''}
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <h6 class="card-title">${task.title}</h6>
+                <div class="d-flex justify-content-between align-items-start task-actions">
+                    <h6 class="card-title task-title">${task.title}</h6>
                     <button class="btn btn-sm ${task.is_pinned ? 'btn-warning' : 'btn-outline-secondary'}" 
                             onclick="togglePin(${task.id})" title="${task.is_pinned ? '핀고정 해제' : '핀고정'}">
                         <i class="fas fa-thumbtack"></i>
                     </button>
                 </div>
-                ${task.description ? `<div class="card-text small task-description-text">${task.description.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}</div>` : ''}
+                ${task.description ? `<div class="card-text small task-description task-description-text">${task.description.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}</div>` : ''}
                 
                 <!-- 카테고리 표시 -->
                 ${task.category ? `
-                    <div class="mb-2">
+                    <div class="mb-2 task-category">
                         <span class="badge" style="background-color: ${task.category.color}; color: white;">
                             <i class="fas fa-tag"></i> ${task.category.name}
                         </span>
@@ -1114,7 +1242,7 @@ function createTaskCard(task) {
                 
                 <!-- 레이블 표시 -->
                 ${task.labels ? `
-                    <div class="mb-2">
+                    <div class="mb-2 task-labels">
                         ${task.labels.split(',').map(label => `
                             <span class="badge bg-info me-1" style="font-size: 0.7rem;">
                                 <i class="fas fa-tag"></i> ${label.trim()}
@@ -1124,7 +1252,7 @@ function createTaskCard(task) {
                 ` : ''}
                 
                 <!-- 날짜 정보 -->
-                <div class="card-dates mb-2">
+                <div class="card-dates mb-2 task-meta">
                     <small class="text-muted">
                         <div><i class="fas fa-plus-circle"></i> 생성: ${formatDate(createdDate)}</div>
                         <div><i class="fas fa-edit"></i> 변경: ${formatDate(updatedDate)} (${daysSinceUpdate}일 전)</div>
@@ -1132,9 +1260,9 @@ function createTaskCard(task) {
                     </small>
                 </div>
                 
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center task-priority">
                     <span class="badge bg-${priorityColors[task.priority]}">${priorityLabels[task.priority]}</span>
-                    <div class="btn-group btn-group-sm">
+                    <div class="btn-group btn-group-sm task-actions">
                         <button class="btn btn-outline-primary" onclick="editTask(${task.id})">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -1190,15 +1318,128 @@ function htmlToText(html) {
 
 // 드래그 앤 드롭 초기화
 function initializeDragAndDrop() {
+    // 자동 스크롤 변수
+    let autoScrollTimer = null;
+    let isAutoScrolling = false;
+    
+    // 자동 스크롤 함수
+    function autoScroll(direction, speed) {
+        if (isAutoScrolling) {
+            const scrollAmount = speed * direction;
+            window.scrollBy(0, scrollAmount);
+            
+            // 수평 스크롤도 지원
+            const container = document.querySelector('.row');
+            if (container) {
+                container.scrollBy(scrollAmount, 0);
+            }
+            
+            autoScrollTimer = setTimeout(() => autoScroll(direction, speed), 50);
+        }
+    }
+    
+    // 자동 스크롤 시작
+    function startAutoScroll(direction, speed = 10) {
+        if (!isAutoScrolling) {
+            isAutoScrolling = true;
+            autoScroll(direction, speed);
+        }
+    }
+    
+    // 자동 스크롤 중지
+    function stopAutoScroll() {
+        isAutoScrolling = false;
+        if (autoScrollTimer) {
+            clearTimeout(autoScrollTimer);
+            autoScrollTimer = null;
+        }
+    }
+    
     document.querySelectorAll('.task-list').forEach(list => {
         new Sortable(list, {
             group: 'tasks',
             animation: 150,
+            scroll: true, // SortableJS 내장 스크롤 활성화
+            scrollSensitivity: 100, // 스크롤 감도
+            scrollSpeed: 20, // 스크롤 속도
+            bubbleScroll: true, // 부모 요소 스크롤 지원
+            
+            // 드래그 시작 시
+            onStart: function(evt) {
+                document.body.style.cursor = 'grabbing';
+                evt.item.style.opacity = '0.8';
+                evt.item.style.transform = 'rotate(5deg)';
+                evt.item.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+                evt.item.style.zIndex = '9999';
+            },
+            
+            // 드래그 중
+            onMove: function(evt) {
+                const rect = evt.originalEvent.target.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                const windowWidth = window.innerWidth;
+                const scrollThreshold = 100; // 가장자리에서 이 픽셀만큼 떨어져야 스크롤 시작
+                
+                // 마우스 위치
+                const mouseY = evt.originalEvent.clientY;
+                const mouseX = evt.originalEvent.clientX;
+                
+                // 세로 스크롤 체크
+                if (mouseY < scrollThreshold) {
+                    // 상단 근처 - 위로 스크롤
+                    startAutoScroll(-1, Math.max(5, (scrollThreshold - mouseY) / 5));
+                } else if (mouseY > windowHeight - scrollThreshold) {
+                    // 하단 근처 - 아래로 스크롤
+                    startAutoScroll(1, Math.max(5, (mouseY - (windowHeight - scrollThreshold)) / 5));
+                } else {
+                    stopAutoScroll();
+                }
+                
+                // 가로 스크롤 체크 (칸반보드가 넓을 때)
+                const kanbanBoard = document.getElementById('kanban-board');
+                if (kanbanBoard) {
+                    if (mouseX < scrollThreshold) {
+                        // 좌측 근처 - 왼쪽으로 스크롤
+                        kanbanBoard.scrollBy(-10, 0);
+                    } else if (mouseX > windowWidth - scrollThreshold) {
+                        // 우측 근처 - 오른쪽으로 스크롤
+                        kanbanBoard.scrollBy(10, 0);
+                    }
+                }
+            },
+            
+            // 드래그 종료 시
             onEnd: function(evt) {
+                // 스타일 복원
+                document.body.style.cursor = '';
+                evt.item.style.opacity = '';
+                evt.item.style.transform = '';
+                evt.item.style.boxShadow = '';
+                evt.item.style.zIndex = '';
+                
+                // 자동 스크롤 중지
+                stopAutoScroll();
+                
+                // 상태 업데이트
                 const taskId = evt.item.dataset.taskId;
                 const newStatusId = evt.to.dataset.statusId;
                 
-                updateTaskStatus(taskId, newStatusId);
+                if (taskId && newStatusId) {
+                    updateTaskStatus(taskId, newStatusId);
+                }
+            },
+            
+            // 드래그 취소 시
+            onCancel: function(evt) {
+                // 스타일 복원
+                document.body.style.cursor = '';
+                evt.item.style.opacity = '';
+                evt.item.style.transform = '';
+                evt.item.style.boxShadow = '';
+                evt.item.style.zIndex = '';
+                
+                // 자동 스크롤 중지
+                stopAutoScroll();
             }
         });
     });
@@ -1212,10 +1453,59 @@ async function updateTaskStatus(taskId, statusId) {
         });
         
         if (response.ok) {
-            loadTasks();
+            await loadTasks(); // 데이터 다시 로드 후 자동으로 렌더링됨
+        } else {
+            const errorData = await response.json();
+            console.error('상태 업데이트 실패:', errorData);
+            alert('상태 업데이트에 실패했습니다: ' + (errorData.detail || '알 수 없는 오류'));
         }
     } catch (error) {
         console.error('상태 업데이트 실패:', error);
+        alert('상태 업데이트에 실패했습니다.');
+    }
+}
+
+// 할일 카테고리 업데이트
+async function updateTaskCategory(taskId, categoryId) {
+    try {
+        const url = categoryId 
+            ? `/api/tasks/${taskId}/category?category_id=${categoryId}`
+            : `/api/tasks/${taskId}/category`;
+        
+        const response = await fetch(url, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            await loadTasks(); // 데이터 다시 로드 후 자동으로 렌더링됨
+        } else {
+            const errorData = await response.json();
+            console.error('카테고리 업데이트 실패:', errorData);
+            alert('카테고리 업데이트에 실패했습니다: ' + (errorData.detail || '알 수 없는 오류'));
+        }
+    } catch (error) {
+        console.error('카테고리 업데이트 실패:', error);
+        alert('카테고리 업데이트에 실패했습니다.');
+    }
+}
+
+// 할일 우선순위 업데이트
+async function updateTaskPriority(taskId, priority) {
+    try {
+        const response = await fetch(`/api/tasks/${taskId}/priority?priority=${priority}`, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            await loadTasks(); // 데이터 다시 로드 후 자동으로 렌더링됨
+        } else {
+            const errorData = await response.json();
+            console.error('우선순위 업데이트 실패:', errorData);
+            alert('우선순위 업데이트에 실패했습니다: ' + (errorData.detail || '알 수 없는 오류'));
+        }
+    } catch (error) {
+        console.error('우선순위 업데이트 실패:', error);
+        alert('우선순위 업데이트에 실패했습니다.');
     }
 }
 
@@ -1344,7 +1634,24 @@ function editTask(taskId) {
     
     document.querySelector('#taskModal .modal-title').textContent = '할일 수정';
     
-    new bootstrap.Modal(document.getElementById('taskModal')).show();
+    const taskModal = new bootstrap.Modal(document.getElementById('taskModal'));
+    taskModal.show();
+}
+
+// 할일 모달에서 키보드 이벤트 처리
+function handleTaskModalKeydown(e) {
+    // Ctrl+Enter 또는 Cmd+Enter로 저장
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        saveTask();
+    }
+    // ESC로 모달 닫기 (기본 Bootstrap 동작을 보완)
+    else if (e.key === 'Escape') {
+        const taskModal = bootstrap.Modal.getInstance(document.getElementById('taskModal'));
+        if (taskModal) {
+            taskModal.hide();
+        }
+    }
 }
 
 // 할일 삭제
@@ -2006,6 +2313,26 @@ document.getElementById('taskModal').addEventListener('hidden.bs.modal', functio
     document.getElementById('taskForm').reset();
     document.getElementById('taskId').value = '';
     document.querySelector('#taskModal .modal-title').textContent = '할일 추가';
+    
+    // 키보드 이벤트 리스너 제거
+    const taskModalElement = document.getElementById('taskModal');
+    taskModalElement.removeEventListener('keydown', handleTaskModalKeydown);
+});
+
+// 할일 모달이 열릴 때 키보드 이벤트 추가
+document.getElementById('taskModal').addEventListener('shown.bs.modal', function() {
+    const taskModalElement = document.getElementById('taskModal');
+    
+    // 기존 이벤트 리스너 제거 (중복 방지)
+    taskModalElement.removeEventListener('keydown', handleTaskModalKeydown);
+    
+    // 새 이벤트 리스너 추가
+    taskModalElement.addEventListener('keydown', handleTaskModalKeydown);
+    
+    // 제목 입력창에 포커스
+    setTimeout(() => {
+        document.getElementById('taskTitle').focus();
+    }, 100);
 });
 
 // 뷰 전환 함수
@@ -2088,10 +2415,15 @@ function createListTaskRow(task) {
     row.className = task.is_pinned ? 'table-warning' : '';
     row.dataset.taskId = task.id;
     
-    // 더블클릭 이벤트 추가
+    // 행에 더블클릭 이벤트 추가 (드롭다운, 버튼 제외)
     row.addEventListener('dblclick', function(e) {
-        // 체크박스나 버튼 클릭 시에는 편집 모드로 진입하지 않음
-        if (e.target.type === 'checkbox' || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        // 드롭다운, 버튼, 체크박스 클릭 시에는 편집 모드로 진입하지 않음
+        if (e.target.type === 'checkbox' || 
+            e.target.tagName === 'BUTTON' || 
+            e.target.closest('button') ||
+            e.target.closest('.dropdown') ||
+            e.target.classList.contains('dropdown-toggle') ||
+            e.target.closest('.dropdown-toggle')) {
             return;
         }
         editTask(task.id);
@@ -2099,7 +2431,7 @@ function createListTaskRow(task) {
     
     // 행에 hover 효과를 위한 클래스 추가
     row.style.cursor = 'pointer';
-    row.title = '더블클릭하여 편집';
+    row.title = '더블클릭하여 편집 (드롭다운 제외)';
     
     const priorityColors = {
         1: 'success',
@@ -2135,14 +2467,75 @@ function createListTaskRow(task) {
             </button>
         </td>
         <td>
-            <div class="fw-bold">${task.title}</div>
+            <div class="fw-bold" style="cursor: pointer;" ondblclick="editTask(${task.id})" title="더블클릭하여 편집">${task.title}</div>
             ${task.description ? `<div class="text-muted task-description-text" style="font-size: 0.8rem;">${task.description.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}</div>` : ''}
             ${task.labels ? `<div class="mt-1">${task.labels.split(',').map(label => `<span class="badge bg-info me-1" style="font-size: 0.65rem;"><i class="fas fa-tag"></i> ${label.trim()}</span>`).join('')}</div>` : ''}
         </td>
-        <td>${statusBadge}</td>
-        <td>${categoryBadge}</td>
         <td>
-            <span class="badge bg-${priorityColors[task.priority]}">${priorityLabels[task.priority]}</span>
+            <div class="dropdown">
+                <span class="badge ${task.status.is_done ? 'bg-success' : (task.status.status_type === 'progress' ? 'bg-warning' : 'bg-secondary')} dropdown-toggle" 
+                      style="cursor: pointer;" 
+                      data-bs-toggle="dropdown" 
+                      title="클릭하여 상태 변경">
+                    ${task.status.name}
+                </span>
+                <ul class="dropdown-menu">
+                    ${statuses.map(status => `
+                        <li><a class="dropdown-item ${task.status.id === status.id ? 'active' : ''}" 
+                               href="#" 
+                               onclick="updateTaskStatus(${task.id}, ${status.id})">${status.name}</a></li>
+                    `).join('')}
+                </ul>
+            </div>
+        </td>
+        <td>
+            <div class="dropdown">
+                ${task.category 
+                    ? `<span class="badge dropdown-toggle" 
+                             style="background-color: ${task.category.color}; color: white; cursor: pointer;" 
+                             data-bs-toggle="dropdown" 
+                             title="클릭하여 카테고리 변경">
+                         <i class="fas fa-tag"></i> ${task.category.name}
+                       </span>`
+                    : `<span class="text-muted dropdown-toggle" 
+                             style="cursor: pointer;" 
+                             data-bs-toggle="dropdown" 
+                             title="클릭하여 카테고리 설정">없음</span>`
+                }
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item ${!task.category ? 'active' : ''}" 
+                           href="#" 
+                           onclick="updateTaskCategory(${task.id}, null)">카테고리 없음</a></li>
+                    ${categories.map(category => `
+                        <li><a class="dropdown-item ${task.category && task.category.id === category.id ? 'active' : ''}" 
+                               href="#" 
+                               onclick="updateTaskCategory(${task.id}, ${category.id})">
+                            <span class="badge me-2" style="background-color: ${category.color}; color: white;">
+                                <i class="fas fa-tag"></i>
+                            </span> ${category.name}
+                        </a></li>
+                    `).join('')}
+                </ul>
+            </div>
+        </td>
+        <td>
+            <div class="dropdown">
+                <span class="badge bg-${priorityColors[task.priority]} dropdown-toggle" 
+                      style="cursor: pointer;" 
+                      data-bs-toggle="dropdown" 
+                      title="클릭하여 우선순위 변경">
+                    ${priorityLabels[task.priority]}
+                </span>
+                <ul class="dropdown-menu">
+                    ${Object.entries(priorityLabels).map(([priority, label]) => `
+                        <li><a class="dropdown-item ${task.priority == priority ? 'active' : ''}" 
+                               href="#" 
+                               onclick="updateTaskPriority(${task.id}, ${priority})">
+                            <span class="badge bg-${priorityColors[priority]} me-2">${label}</span>
+                        </a></li>
+                    `).join('')}
+                </ul>
+            </div>
         </td>
         <td>
             <small class="text-muted">${formatDate(new Date(task.created_at))}</small>

@@ -1,57 +1,65 @@
 @echo off
-echo Todo2 애플리케이션 EXE 파일 빌드를 시작합니다...
+chcp 65001 > nul
+echo Starting Todo2 application EXE build...
 echo.
 
-REM 가상환경 활성화
+REM Activate virtual environment
 if exist "venv\Scripts\activate.bat" (
-    echo 가상환경을 활성화합니다...
+    echo Activating virtual environment...
     call venv\Scripts\activate.bat
 ) else (
-    echo 가상환경을 찾을 수 없습니다. 전역 Python을 사용합니다.
+    echo Virtual environment not found. Using global Python.
 )
 
-REM PyInstaller 설치 확인
-echo PyInstaller를 확인/설치합니다...
-pip install pyinstaller
+REM Check and install required packages
+echo Installing required packages...
+pip install pyinstaller pystray pillow win10toast
 
-REM 이전 빌드 결과 정리
+REM Clean previous build results and cache
 if exist "dist" (
-    echo 이전 빌드 결과를 정리합니다...
+    echo Cleaning previous build results...
     rmdir /s /q dist
 )
 if exist "build" (
     rmdir /s /q build
 )
+if exist "__pycache__" (
+    rmdir /s /q __pycache__
+)
 
-REM EXE 파일 빌드
+REM Clear PyInstaller cache
+echo Clearing PyInstaller cache...
+pyinstaller --clean todo2.spec
+
+REM Build EXE file
 echo.
-echo EXE 파일을 빌드합니다...
+echo Building EXE file...
 pyinstaller todo2.spec
 
-REM 빌드 결과 확인
+REM Check build result
 if exist "dist\Todo2.exe" (
     echo.
     echo ================================
-    echo    빌드가 성공적으로 완료되었습니다!
+    echo    Build completed successfully!
     echo ================================
     echo.
-    echo 생성된 파일: dist\Todo2.exe
+    echo Generated file: dist\Todo2.exe
     echo.
-    echo EXE 파일을 테스트하시겠습니까? (Y/N)
+    echo Would you like to test the EXE file? (Y/N)
     set /p choice=
     if /i "%choice%"=="Y" (
         echo.
-        echo Todo2.exe를 실행합니다...
+        echo Running Todo2.exe...
         cd dist
         Todo2.exe
     )
 ) else (
     echo.
     echo ================================
-    echo       빌드에 실패했습니다!
+    echo        Build failed!
     echo ================================
     echo.
-    echo 오류 로그를 확인하고 다시 시도해주세요.
+    echo Please check error logs and try again.
 )
 
 echo.

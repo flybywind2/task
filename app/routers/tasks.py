@@ -192,6 +192,75 @@ async def update_task_status(task_id: int, status_id: int, db: Session = Depends
     
     return {"message": "Status updated successfully"}
 
+@router.put("/tasks/{task_id}/category")
+async def update_task_category(task_id: int, category_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    db_task = db.query(Task).filter(Task.id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # 카테고리 확인 (category_id가 None이면 카테고리 제거)
+    if category_id is not None:
+        category = db.query(Category).filter(Category.id == category_id).first()
+        if not category:
+            raise HTTPException(status_code=400, detail="Category not found")
+    
+    # 로깅을 위한 이전 카테고리 저장
+    old_category = db_task.category.name if db_task.category else None
+    
+    db_task.category_id = category_id
+    db.commit()
+    db.refresh(db_task)
+    
+    # 로깅
+    try:
+        task_data = {
+            "id": db_task.id,
+            "title": db_task.title,
+            "status": db_task.status.name if db_task.status else None,
+            "category": db_task.category.name if db_task.category else None,
+            "priority": db_task.priority,
+            "is_pinned": db_task.is_pinned
+        }
+        new_category = db_task.category.name if db_task.category else None
+        daily_logger.log_task_updated(task_data, {"category": old_category})
+    except Exception as e:
+        print(f"로깅 실패: {e}")
+    
+    return {"message": "Category updated successfully"}
+
+@router.put("/tasks/{task_id}/priority")
+async def update_task_priority(task_id: int, priority: int = Query(...), db: Session = Depends(get_db)):
+    db_task = db.query(Task).filter(Task.id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # 우선순위 유효성 검사
+    if priority not in [1, 2, 3, 4]:
+        raise HTTPException(status_code=400, detail="Priority must be between 1 and 4")
+    
+    # 로깅을 위한 이전 우선순위 저장
+    old_priority = db_task.priority
+    
+    db_task.priority = priority
+    db.commit()
+    db.refresh(db_task)
+    
+    # 로깅
+    try:
+        task_data = {
+            "id": db_task.id,
+            "title": db_task.title,
+            "status": db_task.status.name if db_task.status else None,
+            "category": db_task.category.name if db_task.category else None,
+            "priority": db_task.priority,
+            "is_pinned": db_task.is_pinned
+        }
+        daily_logger.log_task_updated(task_data, {"priority": old_priority})
+    except Exception as e:
+        print(f"로깅 실패: {e}")
+    
+    return {"message": "Priority updated successfully"}
+
 @router.put("/tasks/{task_id}/pin")
 async def toggle_task_pin(task_id: int, pin_data: TaskPin, db: Session = Depends(get_db)):
     db_task = db.query(Task).filter(Task.id == task_id).first()

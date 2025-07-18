@@ -1212,3 +1212,10 @@ body {
     z-index: 5;
     opacity: 0.8;
 }
+
+/* 미니 모드 토글 버튼 활성화 상태 */
+#miniCardToggle.active {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
+}

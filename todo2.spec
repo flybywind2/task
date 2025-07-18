@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 # 현재 디렉토리 경로
-current_dir = Path(__file__).parent
+current_dir = Path(os.getcwd())
 
 # 정적 파일 및 템플릿 경로 설정
 datas = [
@@ -48,6 +48,13 @@ hiddenimports = [
     'alembic',
     'alembic.config',
     'email_validator',
+    'pystray',
+    'PIL',
+    'PIL.Image',
+    'PIL.ImageDraw',
+    'win10toast',
+    'win32gui',
+    'win32con',
 ]
 
 block_cipher = None
@@ -84,7 +91,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,  # CMD 창 숨기기
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
